@@ -1,0 +1,764 @@
+import { ConnectionMeta, EventEmitter } from "devframe/types";
+//#region src/types/locale.d.ts
+/**
+ * Translations of a `title`, keyed by BCP 47 tag (`'zh-CN'`, `'ja'`). The
+ * plain `title` stays the default and is what a reader shows when no tag
+ * matches, so a registrant adds languages without breaking a reader that
+ * ignores this field. Resolve with `resolveTitle()` from `@devframes/hub`.
+ */
+type DevframeTitleLocales = Record<string, string>;
+/** Anything carrying a `title` with optional translations: a dock entry, a command, a launcher. */
+interface DevframeTitled {
+  title: string;
+  titleLocales?: DevframeTitleLocales;
+}
+//#endregion
+//#region ../../node_modules/.pnpm/@standard-schema+spec@1.1.0/node_modules/@standard-schema/spec/dist/index.d.ts
+/** The Standard Typed interface. This is a base type extended by other specs. */
+interface StandardTypedV1<Input = unknown, Output = Input> {
+  /** The Standard properties. */
+  readonly "~standard": StandardTypedV1.Props<Input, Output>;
+}
+declare namespace StandardTypedV1 {
+  /** The Standard Typed properties interface. */
+  interface Props<Input = unknown, Output = Input> {
+    /** The version number of the standard. */
+    readonly version: 1;
+    /** The vendor name of the schema library. */
+    readonly vendor: string;
+    /** Inferred types associated with the schema. */
+    readonly types?: Types<Input, Output> | undefined;
+  }
+  /** The Standard Typed types interface. */
+  interface Types<Input = unknown, Output = Input> {
+    /** The input type of the schema. */
+    readonly input: Input;
+    /** The output type of the schema. */
+    readonly output: Output;
+  }
+  /** Infers the input type of a Standard Typed. */
+  type InferInput<Schema extends StandardTypedV1> = NonNullable<Schema["~standard"]["types"]>["input"];
+  /** Infers the output type of a Standard Typed. */
+  type InferOutput<Schema extends StandardTypedV1> = NonNullable<Schema["~standard"]["types"]>["output"];
+}
+/** The Standard Schema interface. */
+interface StandardSchemaV1<Input = unknown, Output = Input> {
+  /** The Standard Schema properties. */
+  readonly "~standard": StandardSchemaV1.Props<Input, Output>;
+}
+declare namespace StandardSchemaV1 {
+  /** The Standard Schema properties interface. */
+  interface Props<Input = unknown, Output = Input> extends StandardTypedV1.Props<Input, Output> {
+    /** Validates unknown input values. */
+    readonly validate: (value: unknown, options?: StandardSchemaV1.Options | undefined) => Result<Output> | Promise<Result<Output>>;
+  }
+  /** The result interface of the validate function. */
+  type Result<Output> = SuccessResult<Output> | FailureResult;
+  /** The result interface if validation succeeds. */
+  interface SuccessResult<Output> {
+    /** The typed output value. */
+    readonly value: Output;
+    /** A falsy value for `issues` indicates success. */
+    readonly issues?: undefined;
+  }
+  interface Options {
+    /** Explicit support for additional vendor-specific parameters, if needed. */
+    readonly libraryOptions?: Record<string, unknown> | undefined;
+  }
+  /** The result interface if validation fails. */
+  interface FailureResult {
+    /** The issues of failed validation. */
+    readonly issues: ReadonlyArray<Issue>;
+  }
+  /** The issue interface of the failure output. */
+  interface Issue {
+    /** The error message of the issue. */
+    readonly message: string;
+    /** The path of the issue, if any. */
+    readonly path?: ReadonlyArray<PropertyKey | PathSegment> | undefined;
+  }
+  /** The path segment interface of the issue. */
+  interface PathSegment {
+    /** The key representing a path segment. */
+    readonly key: PropertyKey;
+  }
+  /** The Standard types interface. */
+  interface Types<Input = unknown, Output = Input> extends StandardTypedV1.Types<Input, Output> {}
+  /** Infers the input type of a Standard. */
+  type InferInput<Schema extends StandardTypedV1> = StandardTypedV1.InferInput<Schema>;
+  /** Infers the output type of a Standard. */
+  type InferOutput<Schema extends StandardTypedV1> = StandardTypedV1.InferOutput<Schema>;
+}
+//#endregion
+//#region src/types/docks.d.ts
+interface DevframeDocksHost {
+  readonly views: Map<string, DevframeDockUserEntry>;
+  readonly events: EventEmitter<{
+    'docks:entry:updated': (entry: DevframeDockUserEntry) => void;
+    'docks:activate': (activation: DevframeDockActivation) => void;
+  }>;
+  register: <T extends DevframeDockUserEntry>(entry: T, force?: boolean) => {
+    update: (patch: Partial<T>) => void;
+  };
+  update: (entry: DevframeDockUserEntry) => void;
+  values: () => DevframeDockEntry[];
+  /**
+   * Request the active viewer switch its focused dock to `dockId`, optionally
+   * carrying `params` for the target dock to interpret (e.g. a terminals
+   * session id).
+   *
+   * Any connected client may drive this via the `hub:docks:activate` RPC, so a
+   * mounted devframe running in its own iframe can steer the host shell's dock
+   * selection, which is otherwise client-local. The request is delivered live
+   * to connected clients (broadcast) and mirrored into the
+   * `devframe:docks:active` shared state so a dock that mounts in response
+   * still sees it. Activation is best-effort: unknown dock ids degrade
+   * gracefully.
+   */
+  activate: (dockId: string, params?: Record<string, unknown>) => void;
+}
+/** Current state of one dock panel in a host page. */
+interface DevframeDockPanelState {
+  state: 'open' | 'closed' | 'hidden';
+  selectedDockId?: string;
+}
+/**
+ * A request to switch the active dock. `params` is an opaque, serializable
+ * bag the target dock interprets; the terminals dock reads `params.sessionId`
+ * to focus a specific session.
+ */
+interface DevframeDockActivation {
+  dockId: string;
+  params?: Record<string, unknown>;
+}
+/**
+ * Shape of the `devframe:docks:active` shared-state slot: the most recent
+ * {@link DevframeDockActivation}, or `null` before any activation. Mirrored
+ * so a dock that mounts in response to an activation can still converge on the
+ * request instead of missing the live broadcast.
+ */
+interface DevframeDocksActiveState {
+  activation: DevframeDockActivation | null;
+}
+/**
+ * Known categories the hub orders by default (see
+ * {@link import('../constants').DEFAULT_CATEGORIES_ORDER}). Kits may pass their
+ * own category ids; `(string & {})` keeps autocomplete on the known set while
+ * allowing arbitrary string values. `~builtin` is reserved for the viewer's
+ * own built-in views (see {@link DevframeViewBuiltin}) and always sorts last.
+ */
+type DevframeDockEntryCategory = 'framework' | 'app' | 'ui' | 'data' | 'web' | 'performance' | 'advanced' | 'docs' | 'default' | '~builtin' | (string & {});
+type DevframeDockEntryIcon = string | {
+  light: string;
+  dark: string;
+};
+/** Color for a dock-bar entry's {@link DevframeDockEntryBase.badge}, mirroring json-render's `TabDescriptor.badgeVariant`. */
+type DevframeDockBadgeVariant = 'default' | 'info' | 'success' | 'warning' | 'danger';
+interface DevframeDockEntryBase {
+  id: string;
+  title: string;
+  /** Translations of `title` by BCP 47 tag; see `resolveTitle()` from `@devframes/hub`. */
+  titleLocales?: DevframeTitleLocales;
+  icon: DevframeDockEntryIcon;
+  /**
+   * The default order of the entry in the dock.
+   * The higher the number the earlier it appears.
+   * @default 0
+   */
+  defaultOrder?: number;
+  /**
+   * The category of the entry, a field with a dual role that depends on
+   * whether {@link groupId} resolves to a registered {@link DevframeViewGroup}:
+   *
+   * - **Ungrouped (or orphan) entry**: `category` is the entry's OUTER bucket
+   *   on the dock bar, ordered by {@link import('../constants').DEFAULT_CATEGORIES_ORDER}.
+   * - **Grouped entry** (a `groupId` that resolves to a registered group):
+   *   the OUTER bucket is instead the group's own `category`, and this field is
+   *   reinterpreted as the entry's IN-GROUP sub-category, used to sub-divide and
+   *   sort members inside the group's popover / sub-navigation.
+   *
+   * Falls back to `'default'` when omitted, both as an outer bucket and, for a
+   * grouped member, as its in-group sub-bucket.
+   *
+   * @default 'default'
+   */
+  category?: DevframeDockEntryCategory;
+  /**
+   * Conditional visibility expression.
+   * When set, the dock entry is only visible when the expression evaluates to true.
+   * Uses the same syntax as command `when` clauses.
+   *
+   * Set to `'false'` to unconditionally hide the entry.
+   *
+   * @example 'clientType == embedded'
+   * @see {@link import('devframe/utils/when').evaluateWhen}
+   */
+  when?: string;
+  /**
+   * Render-only conditional visibility expression, same syntax as {@link when}.
+   * When it evaluates to `false`, a viewer omits the entry from the rendered
+   * dock bar / list, but the entry stays registered and fully reachable:
+   * `docks.activate()`/`switchEntry()` by id, RPC lookups, and anything else
+   * that walks the raw entry list (e.g. the {@link DevframeViewIframe.subTabs}
+   * frame-nav adapter) keep working exactly as if it were visible.
+   *
+   * Use this instead of {@link when} when an entry must remain part of the
+   * model without a dock-bar button of its own; the canonical case is a
+   * shared-frame {@link DevframeViewIframe.subTabs anchor}: set
+   * `visibility: 'false'` on the anchor so only its synthesized member tabs
+   * render, while the anchor itself keeps driving the postMessage nav loop.
+   * `when`, by contrast, is the general relevance switch for the entry as a
+   * whole; reach for `visibility` only for this render-only carve-out.
+   *
+   * Set to `'false'` to unconditionally hide the entry's own dock-bar button.
+   *
+   * @example 'false'
+   * @see {@link import('devframe/utils/when').evaluateWhen}
+   */
+  visibility?: string;
+  /**
+   * Badge text to display on the dock icon (e.g., unread count)
+   */
+  badge?: string;
+  /**
+   * Colors {@link badge}. Omitted (or `'default'`) keeps the existing neutral
+   * fill, so every pre-existing badge consumer keeps its current look.
+   */
+  badgeVariant?: DevframeDockBadgeVariant;
+  /**
+   * Id of the group this entry belongs to. When set, hosts collapse this entry
+   * under the matching group's button instead of showing it directly on the
+   * dock bar.
+   *
+   * This is a flat pointer: membership, not containment. The entry stays an
+   * independently-registered, top-level entry; only its rendering is grouped
+   * downstream.
+   *
+   * When the referenced group **is** registered, it supplies the entry's OUTER
+   * dock-bar category (the group's own {@link category}), and this entry's own
+   * {@link category} is reinterpreted as its IN-GROUP sub-category. When the
+   * referenced group is **never** registered, the entry renders as a normal
+   * top-level entry and falls back to using its own {@link category} as the
+   * outer bucket (orphan tolerance).
+   *
+   * @see {@link DevframeViewGroup}
+   */
+  groupId?: string;
+}
+interface ClientScriptEntry {
+  /**
+   * Initialize after trust without waiting for dock activation.
+   * @default false
+   */
+  eager?: boolean;
+  /**
+   * What to import: either a **URL the host serves** (a self-contained ES
+   * module, e.g. `/@fs/<abs path>` under Vite or a statically-mounted bundle
+   * path), or a **bare npm specifier** (e.g.
+   * `'vite-plugin-vue-tracer/client/vite-devtools'`), a host-runtime
+   * capability resolved through the host-advertised
+   * `ConnectionMeta.configs.dock.clientModuleResolution` template. On a host
+   * that declares no template, ship a self-contained bundle and pass its URL
+   * instead (see `DF8111`).
+   */
+  importFrom: string;
+  /**
+   * The name to import the module as
+   *
+   * @default 'default'
+   */
+  importName?: string;
+}
+declare module 'devframe/types' {
+  interface DevframeConnectionConfigsRegistry {
+    /** Static dock-layer config a hub host publishes through the connection handshake (`initHub({ clientModuleResolution })` → `ctx.staticConfig.dock`). */
+    dock: {
+      /**
+       * URL template resolving a **bare-specifier** client script to an
+       * importable URL on this host, with `{specifier}` replaced with the bare
+       * specifier (a token-less template is used as a prefix). Declaring it
+       * advertises the host runtime can serve npm modules to the browser:
+       * Vite hosts declare `'/@id/{specifier}'`, routing the import (and its
+       * transitive bare imports) through the app's own module graph. Hosts
+       * without such a runtime (e.g. Next.js) leave it undeclared.
+       */
+      clientModuleResolution?: string;
+    };
+  }
+}
+interface DevframeViewIframe extends DevframeDockEntryBase {
+  type: 'iframe';
+  url: string;
+  /** Request the address bar for this iframe dock. Pass an object to configure its controls. The user's global always-show setting forces it on for every iframe. */
+  addressBar?: boolean | {
+    /** Override Back visibility. Cross-origin history access may still be blocked by the browser. */
+    back?: boolean;
+    /** Override Reload visibility. */
+    reload?: boolean;
+    /** Override Open externally visibility. */
+    openExternal?: boolean;
+  };
+  /**
+   * The id of the iframe, if multiple tabs is assigned with the same id, the iframe will be shared.
+   *
+   * When not provided, it would be treated as a unique frame.
+   *
+   * `frameId` is an axis independent of {@link DevframeDockEntryBase.groupId}:
+   * it decides *which* iframe element a dock renders into (and which soft-nav
+   * pool it joins), while `groupId` only affects dock-bar grouping. Docks that
+   * share a `frameId` may live in one group, several groups, or none.
+   */
+  frameId?: string;
+  /** Optional page script, initialized on activation or after trust when `eager: true`. */
+  clientScript?: ClientScriptEntry;
+  /**
+   * Soft-navigation target within a shared frame. Set on a **member** dock
+   * (one of several docks sharing a {@link frameId}) to describe which internal
+   * view the embedded app should show. The hub treats {@link NavTarget.path} as
+   * opaque and hands it to the frame's nav shim over `postMessage`; switching to
+   * this dock performs client-side navigation instead of reloading the iframe.
+   *
+   * The anchor dock (the one flagged with {@link subTabs}) leaves this unset.
+   */
+  navTarget?: NavTarget;
+  /**
+   * Marks this iframe as a **shared-frame anchor** whose sub-tabs are discovered
+   * at runtime over a host↔iframe `postMessage` protocol. The client host
+   * auto-attaches the frame-nav adapter when this iframe mounts: it runs the
+   * ready handshake, materializes one client-only member dock per reported tab
+   * (grouped/soft-navigated via this anchor's {@link frameId}), and drives the
+   * live navigation loop. Absent a shim, the anchor simply renders as a single
+   * plain iframe dock.
+   *
+   * Set {@link DevframeDockEntryBase.visibility} to `'false'` on the anchor to
+   * hide its own dock-bar button once tabs are discovered, surfacing only the
+   * synthesized member docks while the anchor keeps driving the nav loop.
+   */
+  subTabs?: FrameSubTabsConfig;
+  /**
+   * Enable remote-UI mode: the hub injects a connection descriptor
+   * (WS URL + pre-approved auth token) into the iframe URL so a hosted
+   * page can connect back via `connectRemoteDevframe()` from
+   * `@devframes/hub/client`, without needing to ship a dist with the
+   * plugin.
+   *
+   * Requires dev mode (no effect in build mode, where no WS server exists).
+   * When enabled, the dock is automatically hidden in build mode unless
+   * the author provides an explicit `when` clause.
+   */
+  remote?: boolean | RemoteDockOptions;
+}
+/**
+ * A structured, soft-navigation target within a shared frame. `path` is opaque
+ * to the hub, which the embedded app maps onto its own router.
+ *
+ * Kept to `path` + `query` so the shape survives shared-state's `Immutable`
+ * projection cleanly (a `DevframeViewIframe` must still narrow back from its
+ * immutable form). An `unknown`/recursive history-`state` field breaks that
+ * round-trip, so richer per-navigation state is intentionally out of scope for
+ * now; carry it in `query` or the app's own store.
+ */
+interface NavTarget {
+  path: string;
+  /**
+   * `readonly` arrays keep this shape stable under the shared-state `Immutable`
+   * projection, so a `Immutable<DevframeViewIframe>` still narrows back to
+   * `DevframeViewIframe` (a mutable `string[]` would not).
+   */
+  query?: Record<string, string | readonly string[]>;
+}
+/**
+ * Configuration for a {@link DevframeViewIframe.subTabs shared-frame anchor}.
+ */
+interface FrameSubTabsConfig {
+  /** Transport for tab discovery + the live nav loop. */
+  protocol: 'postmessage';
+  /**
+   * How long (ms) the adapter waits for the shim's `ready` before treating the
+   * frame as having no shim (the anchor renders as a single plain iframe dock,
+   * and a navigation requested before readiness hard-navigates).
+   *
+   * @default 3000
+   */
+  handshakeTimeoutMs?: number;
+}
+interface RemoteDockOptions {
+  /**
+   * How to pass the connection descriptor to the hosted page.
+   *
+   * - `'fragment'` (default): appended as a URL fragment.
+   *   Not sent in HTTP requests or Referer headers, so safest for auth tokens.
+   * - `'query'`: appended as a URL query parameter. Use when your hosting
+   *   platform rewrites fragments or your SPA router repurposes the fragment
+   *   for navigation. The token will appear in server access logs and
+   *   outbound Referer headers.
+   *
+   * @default 'fragment'
+   */
+  transport?: 'fragment' | 'query';
+  /**
+   * Reject WS handshakes whose `Origin` header doesn't match the dock URL
+   * origin. Turn off when the same hosted app is served from multiple
+   * origins (e.g. preview deploys).
+   *
+   * @default true
+   */
+  originLock?: boolean;
+}
+interface RemoteConnectionInfo extends ConnectionMeta {
+  backend: 'websocket';
+  websocket: string;
+  v: 1;
+  authToken: string;
+  origin: string;
+}
+type DevframeViewLauncherStatus = 'idle' | 'loading' | 'success' | 'error';
+interface DevframeViewLauncher extends DevframeDockEntryBase {
+  type: 'launcher';
+  launcher: {
+    icon?: DevframeDockEntryIcon;
+    title: string;
+    titleLocales?: DevframeTitleLocales;
+    status?: DevframeViewLauncherStatus;
+    error?: string;
+    description?: string;
+    buttonStart?: string;
+    buttonLoading?: string;
+    /**
+     * Bound command id: the launch button, command palette entry, and any
+     * keybinding all resolve to this one handler. A viewer running out of
+     * process dispatches it over the `hub:commands:execute` RPC, the
+     * serializable path {@link onLaunch} can't cross, since a function is
+     * dropped when the entry is projected into the `devframe:docks` shared
+     * state. Register the command (with its handler) via `ctx.commands`.
+     */
+    command?: string;
+    /**
+     * Id of the terminal session this launcher tracks (e.g. the one returned
+     * by `ctx.terminals.startChildProcess`). A viewer surfaces a first-class
+     * "view in terminal" action that calls `hub:docks:activate` with the
+     * terminals dock id and `{ sessionId: terminalSessionId }`, jumping the
+     * user straight to the running process.
+     */
+    terminalSessionId?: string;
+    /**
+     * Latest single line of progress for inline display beneath the launcher
+     * (e.g. the tail of the tracked session's output). Author-set: the owner
+     * patches it via `docks.update()` as the process reports progress.
+     */
+    digest?: string;
+    /**
+     * In-process launch handler. Optional: a same-process host can invoke it
+     * directly, but it does not survive projection into shared state, so an
+     * out-of-process viewer relies on {@link command} instead. Provide one or
+     * both.
+     */
+    onLaunch?: () => Promise<void>;
+  };
+}
+interface DevframeViewAction extends DevframeDockEntryBase {
+  type: 'action';
+  action: ClientScriptEntry;
+}
+interface DevframeViewCustomRender extends DevframeDockEntryBase {
+  type: 'custom-render';
+  renderer: ClientScriptEntry;
+}
+/**
+ * A view rendered natively by the viewer rather than by a plugin: the
+ * settings panel, the terminals feed, the messages feed, etc. A high-level
+ * integration registers the built-in views it wants; the viewer recognizes the
+ * reserved `id` and renders its own UI for it.
+ *
+ * Its {@link DevframeDockEntryBase.category} defaults to `'~builtin'` when
+ * omitted, so built-in views group together and sort last without every
+ * integration repeating it.
+ */
+interface DevframeViewBuiltin extends DevframeDockEntryBase {
+  type: '~builtin';
+  id: string;
+}
+/**
+ * A dock group: a single dock-bar button that collapses every entry whose
+ * {@link DevframeDockEntryBase.groupId} matches this group's `id`.
+ *
+ * A group carries its own `title`/`icon`/`category`/`defaultOrder`/`when`
+ * (inherited from {@link DevframeDockEntryBase}) and has no view payload of its
+ * own; hosts render its members in a popover / sub-navigation. It flows
+ * through the same `register`/`update`/`values` machinery as every other entry,
+ * keyed by `id`.
+ *
+ * The group's `category` is the OUTER bucket for the group button itself AND
+ * for every one of its members; a member's own `category` no longer decides
+ * its outer bucket, but is reinterpreted as an in-group sub-category that
+ * sub-divides and sorts members inside this group. A group with no `category`
+ * buckets itself and its members under `'default'`.
+ *
+ * Grouping is one level deep: a group entry must not itself set `groupId`.
+ */
+interface DevframeViewGroup extends DevframeDockEntryBase {
+  type: 'group';
+  /**
+   * Member id auto-opened when the group button is activated. When unset,
+   * activating the group only reveals its members (popover-only); no view
+   * opens until a member is chosen.
+   */
+  defaultChildId?: string;
+  /**
+   * Per-group override of the in-group sub-category ordering: a map of
+   * sub-category id → ordering weight (lower sorts earlier), mirroring the
+   * shape of {@link import('../constants').DEFAULT_CATEGORIES_ORDER}.
+   *
+   * A member's own {@link DevframeDockEntryBase.category} is reinterpreted as
+   * its IN-GROUP sub-category, and members are sub-divided and sorted by those
+   * sub-categories. By default that sort follows the hub-wide
+   * `DEFAULT_CATEGORIES_ORDER`; set this to reorder the sub-categories **inside
+   * this group only**, leaving the outer dock-bar ordering (and every other
+   * group) untouched.
+   *
+   * Keys are merged over the defaults, so you only list the sub-categories you
+   * want to move; any sub-category absent from the map keeps its default weight
+   * (falling back to `0`).
+   *
+   * @example
+   * ```ts
+   * // In the "nuxt" group, surface `app` tools before `framework` internals.
+   * { type: 'group', id: 'nuxt', categoryOrder: { app: -200 } }
+   * ```
+   */
+  categoryOrder?: Record<string, number>;
+  /**
+   * Optional accent color for the group button. When set, the viewer may use
+   * it to style the group button and/or its popover. When unset, the viewer
+   * falls back to its own default styling.
+   */
+  accentColor?: string;
+}
+/**
+ * The **open** registry of dock entry variants, keyed by their `type`
+ * discriminator. The hub ships the framework-neutral built-ins; opt-in
+ * integrations contribute their own variants through declaration merging,
+ * e.g. `@devframes/json-render/hub` adds a `'json-render'` entry. The hub
+ * itself stays agnostic: it hard-codes no integration-specific variant.
+ *
+ * @example
+ * ```ts
+ * // in an opt-in integration package
+ * declare module '@devframes/hub/types' {
+ *   interface DevframeDockEntryRegistry {
+ *     'my-view': MyDockEntry
+ *   }
+ * }
+ * ```
+ */
+interface DevframeDockEntryRegistry {
+  'iframe': DevframeViewIframe;
+  'action': DevframeViewAction;
+  'custom-render': DevframeViewCustomRender;
+  'launcher': DevframeViewLauncher;
+  'group': DevframeViewGroup;
+  '~builtin': DevframeViewBuiltin;
+}
+type DevframeDockUserEntry = DevframeDockEntryRegistry[keyof DevframeDockEntryRegistry];
+type DevframeDockEntry = DevframeDockUserEntry;
+type DevframeDockEntriesGrouped = [category: string, entries: DevframeDockEntry[]][];
+//#endregion
+//#region src/types/commands.d.ts
+interface DevframeCommandKeybinding {
+  /**
+   * Keyboard shortcut string.
+   * Use "Mod" for platform-aware modifier (Cmd on macOS, Ctrl elsewhere).
+   * Examples: "Mod+K", "Mod+Shift+P", "Alt+N"
+   */
+  key: string;
+}
+interface DevframeCommandBase {
+  /**
+   * Unique namespaced ID, e.g. "vite:open-in-editor"
+   */
+  id: string;
+  title: string;
+  /** Translations of `title` by BCP 47 tag; see `resolveTitle()` from `@devframes/hub`. */
+  titleLocales?: DevframeTitleLocales;
+  description?: string;
+  /**
+   * Icon for the command. Either an Iconify icon string (e.g. "ph:pencil-duotone")
+   * or a theme-specific pair `{ light, dark }`, the same shape as dock icons.
+   */
+  icon?: DevframeDockEntryIcon;
+  category?: string;
+  /**
+   * Whether to show in command palette. Default: true
+   *
+   * - `true`: show the command and flatten its children into search results
+   * - `false`: hide the command entirely from the palette
+   * - `'without-children'`: show the command but don't flatten children into top-level search (children are still accessible via drill-down)
+   */
+  showInPalette?: boolean | 'without-children';
+  /**
+   * Optional context expression for conditional visibility.
+   * When set, the command is only shown in the palette and only executable
+   * when the expression evaluates to true.
+   */
+  when?: string;
+  /**
+   * Whether keyboard shortcuts can invoke this command. Default: true.
+   * Set to false for commands that require arguments from their caller.
+   * The hub UI hides their shortcut settings and ignores default and saved bindings.
+   * Explicit calls through `commands.execute(id, ...args)` remain available.
+   */
+  allowShortcuts?: boolean;
+  /**
+   * Default keyboard shortcut(s) for this command
+   */
+  keybindings?: DevframeCommandKeybinding[];
+}
+/**
+ * Opt-in agent exposure for a server command, mirroring the `agent` field on
+ * `defineRpcFunction`. A command carrying this field (and a `handler`) is
+ * projected into `ctx.agent` as a callable tool, reaching MCP clients through
+ * the devframe MCP adapter.
+ *
+ * `when` clauses are evaluated client-side only and are **not** enforced for
+ * agent calls; opt in a `when`-gated command only if running it outside its
+ * UI context is safe.
+ */
+interface DevframeCommandAgentOptions {
+  /**
+   * Description shown to the agent. Write it as a prompt: state when to call
+   * the command, not just what it does.
+   */
+  description: string;
+  /** Display title (falls back to the command's `title`). */
+  title?: string;
+  /**
+   * Safety classification that drives MCP hint annotations.
+   * @default 'action'
+   */
+  safety?: 'read' | 'action' | 'destructive';
+  /** Free-form tags for grouping/filtering. */
+  tags?: readonly string[];
+  /**
+   * Positional [Standard Schema](https://standardschema.dev/) validators for
+   * the handler's arguments, the same shape RPC definitions carry (valibot,
+   * zod, arktype, devframe's built-in `s` builder, …). Each is advertised
+   * under `arg0` / `arg1` / … on the tool's JSON-Schema input. Omitted: the
+   * tool takes no arguments.
+   */
+  args?: readonly StandardSchemaV1[];
+}
+/**
+ * Server command input: what plugins pass to `ctx.commands.register()`.
+ */
+interface DevframeServerCommandInput extends DevframeCommandBase {
+  /**
+   * Handler for this command. Optional if the command only serves as a group for children.
+   */
+  handler?: (...args: any[]) => any | Promise<any>;
+  /**
+   * Opt this command in to the agent surface (`ctx.agent` → MCP). Requires a
+   * `handler`. See {@link DevframeCommandAgentOptions}.
+   */
+  agent?: DevframeCommandAgentOptions;
+  /**
+   * Static sub-commands, nested arbitrarily deep.
+   * Each child must have a globally unique `id`.
+   */
+  children?: DevframeServerCommandInput[];
+}
+/**
+ * Serializable server command entry, sent over RPC (no handler).
+ */
+interface DevframeServerCommandEntry extends DevframeCommandBase {
+  source: 'server';
+  children?: DevframeServerCommandEntry[];
+}
+/**
+ * Client command, registered in the webcomponent context.
+ */
+interface DevframeClientCommand extends DevframeCommandBase {
+  source: 'client';
+  /**
+   * Action for this command. Optional if the command only serves as a group for children.
+   * Return sub-commands for dynamic nested palette menus (runtime submenus).
+   */
+  action?: (...args: any[]) => void | DevframeClientCommand[] | Promise<void | DevframeClientCommand[]>;
+  /**
+   * Static sub-commands, nested arbitrarily deep.
+   */
+  children?: DevframeClientCommand[];
+}
+/**
+ * Union of command entries visible in the palette.
+ */
+type DevframeCommandEntry = DevframeServerCommandEntry | DevframeClientCommand;
+interface DevframeCommandHandle {
+  readonly id: string;
+  update: (patch: Partial<Omit<DevframeServerCommandInput, 'id'>>) => void;
+  unregister: () => void;
+}
+interface DevframeCommandsHostEvents {
+  'commands:registered': (command: DevframeServerCommandEntry) => void;
+  'commands:unregistered': (id: string) => void;
+}
+interface DevframeCommandsHost {
+  readonly commands: Map<string, DevframeServerCommandInput>;
+  readonly events: EventEmitter<DevframeCommandsHostEvents>;
+  /**
+   * Register a command (with optional children).
+   */
+  register: (command: DevframeServerCommandInput) => DevframeCommandHandle;
+  /**
+   * Unregister a command by ID (removes parent and all children).
+   */
+  unregister: (id: string) => boolean;
+  /**
+   * Execute a command by ID. Searches top-level and children.
+   * Throws if not found or if command has no handler.
+   */
+  execute: (id: string, ...args: any[]) => Promise<unknown>;
+  /**
+   * Returns serializable list (no handlers), preserving tree structure.
+   */
+  list: () => DevframeServerCommandEntry[];
+}
+interface DevframeCommandShortcutOverrides {
+  /**
+   * Command ID → keybinding overrides. Empty array = shortcut disabled.
+   */
+  [commandId: string]: DevframeCommandKeybinding[];
+}
+//#endregion
+//#region src/types/settings.d.ts
+/**
+ * Persisted per-user dock + command settings, synced over the
+ * `devframe:user-settings` shared state. The generic base carries the hub's
+ * own dock-registry and command model that every viewer shares; a viewer
+ * augments it with its own reference-UI toggles via declaration merging:
+ *
+ * ```ts
+ * declare module '@devframes/hub/types' {
+ *   interface DevframeDocksUserSettings {
+ *     myViewerToggle?: boolean
+ *   }
+ * }
+ * ```
+ *
+ * Augmented fields are optional so the hub's `DEFAULT_STATE_USER_SETTINGS()`
+ * (which knows nothing about them) stays assignable, so an absent value reads
+ * as the viewer's documented default.
+ */
+interface DevframeDocksUserSettings {
+  /** Ids of dock entries the user has hidden from the bar. */
+  docksHidden: string[];
+  /** Category ids the user has collapsed/hidden on the bar. */
+  docksCategoriesHidden: string[];
+  /** Ids of dock entries the user has pinned. */
+  docksPinned: string[];
+  /** Per-entry sort weight overriding the registry's default order. */
+  docksCustomOrder: Record<string, number>;
+  /** Per-command keybinding overrides (empty array = shortcut disabled). */
+  commandShortcuts: DevframeCommandShortcutOverrides;
+}
+//#endregion
+export { DevframeViewIframe as A, DevframeDockUserEntry as C, DevframeViewBuiltin as D, DevframeViewAction as E, RemoteConnectionInfo as F, RemoteDockOptions as I, DevframeTitleLocales as L, DevframeViewLauncherStatus as M, FrameSubTabsConfig as N, DevframeViewCustomRender as O, NavTarget as P, DevframeTitled as R, DevframeDockPanelState as S, DevframeDocksHost as T, DevframeDockEntry as _, DevframeCommandEntry as a, DevframeDockEntryIcon as b, DevframeCommandShortcutOverrides as c, DevframeServerCommandEntry as d, DevframeServerCommandInput as f, DevframeDockEntriesGrouped as g, DevframeDockBadgeVariant as h, DevframeCommandBase as i, DevframeViewLauncher as j, DevframeViewGroup as k, DevframeCommandsHost as l, DevframeDockActivation as m, DevframeClientCommand as n, DevframeCommandHandle as o, ClientScriptEntry as p, DevframeCommandAgentOptions as r, DevframeCommandKeybinding as s, DevframeDocksUserSettings as t, DevframeCommandsHostEvents as u, DevframeDockEntryBase as v, DevframeDocksActiveState as w, DevframeDockEntryRegistry as x, DevframeDockEntryCategory as y };

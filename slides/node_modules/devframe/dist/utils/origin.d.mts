@@ -1,0 +1,2 @@
+import { i as validateOriginCandidate, n as isLoopbackAddress, r as isLoopbackHostname, t as isAllowedOrigin } from "../origin-CY6BBHOy.mjs";
+export { isAllowedOrigin, isLoopbackAddress, isLoopbackHostname, validateOriginCandidate };

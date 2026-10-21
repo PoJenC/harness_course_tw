@@ -1,0 +1,175 @@
+{
+  "name": "@unhead/vue",
+  "type": "module",
+  "version": "3.4.3",
+  "description": "Full-stack <head> manager built for Vue.",
+  "author": "Harlan Wilton <harlan@harlanzw.com>",
+  "license": "MIT",
+  "funding": "https://github.com/sponsors/harlan-zw",
+  "homepage": "https://unhead.unjs.io",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/unjs/unhead.git",
+    "directory": "packages/vue"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "next"
+  },
+  "bugs": {
+    "url": "https://github.com/unjs/unhead/issues"
+  },
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.mjs"
+    },
+    "./components": {
+      "types": "./dist/components.d.ts",
+      "default": "./dist/components.mjs"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "default": "./dist/server.mjs"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "default": "./dist/client.mjs"
+    },
+    "./stream/server": {
+      "types": "./dist/stream/server.d.ts",
+      "default": "./dist/stream/server.mjs"
+    },
+    "./stream/client": {
+      "types": "./dist/stream/client.d.ts",
+      "default": "./dist/stream/client.mjs"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "default": "./dist/types.mjs"
+    },
+    "./plugins": {
+      "types": "./dist/plugins.d.ts",
+      "default": "./dist/plugins.mjs"
+    },
+    "./utils": {
+      "types": "./dist/utils.d.ts",
+      "default": "./dist/utils.mjs"
+    },
+    "./scripts": {
+      "types": "./dist/scripts.d.ts",
+      "default": "./dist/scripts.mjs"
+    },
+    "./bundler": {
+      "types": "./dist/bundler.d.ts",
+      "default": "./dist/bundler.mjs"
+    },
+    "./vite": {
+      "types": "./dist/vite.d.ts",
+      "default": "./dist/vite.mjs"
+    },
+    "./stream/vite": {
+      "types": "./dist/stream/vite.d.ts",
+      "default": "./dist/stream/vite.mjs"
+    },
+    "./stream/iife": {
+      "types": "./dist/stream/iife.d.ts",
+      "default": "./dist/stream/iife.mjs"
+    },
+    "./legacy": {
+      "types": "./dist/legacy.d.ts",
+      "default": "./dist/legacy.mjs"
+    }
+  },
+  "main": "dist/index.mjs",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "components": [
+        "dist/components"
+      ],
+      "server": [
+        "dist/server"
+      ],
+      "client": [
+        "dist/client"
+      ],
+      "stream/server": [
+        "dist/stream/server"
+      ],
+      "stream/client": [
+        "dist/stream/client"
+      ],
+      "types": [
+        "dist/types"
+      ],
+      "plugins": [
+        "dist/plugins"
+      ],
+      "utils": [
+        "dist/utils"
+      ],
+      "scripts": [
+        "dist/scripts"
+      ],
+      "bundler": [
+        "dist/bundler"
+      ],
+      "vite": [
+        "dist/vite"
+      ],
+      "stream/vite": [
+        "dist/stream/vite"
+      ],
+      "stream/iife": [
+        "dist/stream/iife"
+      ],
+      "legacy": [
+        "dist/legacy"
+      ]
+    }
+  },
+  "files": [
+    "*.d.ts",
+    "dist",
+    "skills"
+  ],
+  "peerDependencies": {
+    "vite": ">=6.4.2",
+    "vue": ">=3.5.18",
+    "webpack": ">=5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "vite": {
+      "optional": true
+    },
+    "webpack": {
+      "optional": true
+    }
+  },
+  "build": {
+    "external": [
+      "vue"
+    ]
+  },
+  "dependencies": {
+    "@unhead/bundler": "3.4.3",
+    "hookable": "^6.1.1",
+    "unhead": "3.4.3",
+    "unplugin": "^3.3.0"
+  },
+  "devDependencies": {
+    "@vue/compiler-sfc-vapor": "npm:@vue/compiler-sfc@3.6.0-rc.11",
+    "@vue/server-renderer": "^3.5.42",
+    "vite": "^8.3.0",
+    "vue": "^3.5.42",
+    "vue-vapor": "npm:vue@3.6.0-rc.11"
+  },
+  "scripts": {
+    "build": "unbuild",
+    "stub": "unbuild --stub",
+    "test:attw": "attw --pack"
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "name": "@devframes/json-render",
+  "type": "module",
+  "version": "1.2.6",
+  "description": "Protocol layer for describing devframe views as JSON that any renderer can display.",
+  "author": "Anthony Fu <anthonyfu117@hotmail.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/devframes/devframe#readme",
+  "repository": {
+    "directory": "packages/json-render",
+    "type": "git",
+    "url": "git+https://github.com/devframes/devframe.git"
+  },
+  "bugs": "https://github.com/devframes/devframe/issues",
+  "keywords": [
+    "devtools",
+    "devframe",
+    "json-render"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./core": "./dist/core.mjs",
+    "./hub": "./dist/hub.mjs",
+    "./node": "./dist/node/index.mjs",
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.mts",
+  "files": [
+    "dist"
+  ],
+  "peerDependencies": {
+    "@devframes/hub": "1.2.6",
+    "devframe": "1.2.6"
+  },
+  "peerDependenciesMeta": {
+    "@devframes/hub": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@json-render/core": "^0.21.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@devframes/hub": "1.2.6",
+    "@types/node": "^26.6.4",
+    "devframe": "1.2.6",
+    "tsdown": "^0.23.0"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "watch": "tsdown --watch",
+    "typecheck": "tsc --noEmit"
+  }
+}

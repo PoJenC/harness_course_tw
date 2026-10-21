@@ -1,0 +1,21 @@
+import { SourceCodeTransformer } from "@unocss/core";
+//#region src/index.d.ts
+export interface TransformerVariantGroupOptions {
+  /**
+   * Separators to expand.
+   *
+   * ```
+   * foo-(bar baz) -> foo-bar foo-baz
+   *    ^
+   *    separator
+   * ```
+   *
+   * You may set it to `[':']` for strictness.
+   *
+   * @default [':', '-']
+   * @see https://github.com/unocss/unocss/pull/1231
+   */
+  separators?: (':' | '-')[];
+}
+export default function transformerVariantGroup(options?: TransformerVariantGroupOptions): SourceCodeTransformer;
+//#endregion

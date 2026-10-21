@@ -1,0 +1,179 @@
+{
+  "name": "unhead",
+  "type": "module",
+  "version": "3.4.3",
+  "description": "Full-stack <head> manager built for any framework.",
+  "author": {
+    "name": "Harlan Wilton",
+    "email": "harlan@harlanzw.com",
+    "url": "https://harlanzw.com/"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "next"
+  },
+  "license": "MIT",
+  "funding": "https://github.com/sponsors/harlan-zw",
+  "homepage": "https://unhead.unjs.io",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/unjs/unhead.git",
+    "directory": "packages/unhead"
+  },
+  "bugs": {
+    "url": "https://github.com/unjs/unhead/issues"
+  },
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.mjs"
+    },
+    "./plugins": {
+      "types": "./dist/plugins.d.ts",
+      "default": "./dist/plugins.mjs"
+    },
+    "./legacy": {
+      "types": "./dist/legacy.d.ts",
+      "default": "./dist/legacy.mjs"
+    },
+    "./minify": {
+      "types": "./dist/minify.d.ts",
+      "default": "./dist/minify.mjs"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "default": "./dist/server.mjs"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "default": "./dist/client.mjs"
+    },
+    "./stream/server": {
+      "types": "./dist/stream/server.d.ts",
+      "default": "./dist/stream/server.mjs"
+    },
+    "./stream/client": {
+      "types": "./dist/stream/client.d.ts",
+      "default": "./dist/stream/client.mjs"
+    },
+    "./utils": {
+      "types": "./dist/utils.d.ts",
+      "default": "./dist/utils.mjs"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "default": "./dist/types.mjs"
+    },
+    "./scripts": {
+      "types": "./dist/scripts.d.ts",
+      "node": "./dist/scripts.node.mjs",
+      "default": "./dist/scripts.mjs"
+    },
+    "./scripts/triggers": {
+      "types": "./dist/scripts/triggers.d.ts",
+      "default": "./dist/scripts/triggers.mjs"
+    },
+    "./parser": {
+      "types": "./dist/parser.d.ts",
+      "default": "./dist/parser.mjs"
+    },
+    "./validate": {
+      "types": "./dist/validate.d.ts",
+      "default": "./dist/validate.mjs"
+    },
+    "./stream/unplugin": {
+      "types": "./dist/stream/unplugin.d.ts",
+      "default": "./dist/stream/unplugin.mjs"
+    },
+    "./stream/vite": {
+      "types": "./dist/stream/vite.d.ts",
+      "default": "./dist/stream/vite.mjs"
+    },
+    "./stream/iife": {
+      "types": "./dist/stream/iife.d.ts",
+      "default": "./dist/stream/iife.mjs"
+    }
+  },
+  "main": "dist/index.mjs",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "plugins": [
+        "dist/plugins.d.ts"
+      ],
+      "legacy": [
+        "dist/legacy.d.ts"
+      ],
+      "minify": [
+        "dist/minify.d.ts"
+      ],
+      "server": [
+        "dist/server.d.ts"
+      ],
+      "client": [
+        "dist/client.d.ts"
+      ],
+      "stream/server": [
+        "dist/stream/server.d.ts"
+      ],
+      "stream/client": [
+        "dist/stream/client.d.ts"
+      ],
+      "utils": [
+        "dist/utils.d.ts"
+      ],
+      "types": [
+        "dist/types.d.ts"
+      ],
+      "scripts": [
+        "dist/scripts.d.ts"
+      ],
+      "scripts/triggers": [
+        "dist/scripts/triggers.d.ts"
+      ],
+      "parser": [
+        "dist/parser.d.ts"
+      ],
+      "validate": [
+        "dist/validate.d.ts"
+      ],
+      "stream/unplugin": [
+        "dist/stream/unplugin.d.ts"
+      ],
+      "stream/vite": [
+        "dist/stream/vite.d.ts"
+      ],
+      "stream/iife": [
+        "dist/stream/iife.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "*.d.ts",
+    "dist"
+  ],
+  "peerDependencies": {
+    "vite": ">=6.4.2"
+  },
+  "peerDependenciesMeta": {
+    "vite": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "hookable": "^6.1.1",
+    "unplugin": "^3.3.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "rollup": "^4.63.2",
+    "vite": "^8.3.0"
+  },
+  "scripts": {
+    "build": "unbuild",
+    "stub": "unbuild --stub",
+    "test:attw": "attw --pack"
+  }
+}

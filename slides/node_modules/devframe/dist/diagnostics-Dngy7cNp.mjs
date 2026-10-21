@@ -1,0 +1,193 @@
+import { i as defineDiagnostics } from "./nostics-D0PvLZsn.mjs";
+//#region src/node/diagnostics.ts
+/**
+* DF00xx codes are allocated across packages (e.g. @devframes/json-render
+* owns DF0037–DF0041), so this file alone doesn't show the next free
+* number; check `docs/content/6.errors/` for the full allocation before adding one.
+*/
+const diagnostics = defineDiagnostics({
+	docsBase: "https://devfra.me/errors",
+	codes: {
+		DF0006: { why: (p) => `RPC function "${p.name}" is not registered` },
+		DF0007: { why: "AsyncLocalStorage is not set, it likely to be an internal bug of the Devframe foundation" },
+		DF0008: { why: (p) => `distDir ${p.distDir} does not exist` },
+		DF0012: { why: (p) => `Failed to parse storage file: ${p.filepath}, falling back to defaults.` },
+		DF0013: { why: (p) => `Shared state of "${p.key}" is not found, please provide an initial value for the first time` },
+		DF0014: {
+			why: (p) => `RPC function "${p.name}" has an invalid \`agent\` field: \`description\` must be a non-empty string.`,
+			fix: "Provide a short description (~1–3 sentences) explaining what the tool does and when agents should invoke it."
+		},
+		DF0015: {
+			why: (p) => `Agent tool "${p.id}" is already registered.`,
+			fix: "Tool ids must be unique across RPC functions with an `agent` field and tools registered via `ctx.agent.registerTool()`."
+		},
+		DF0016: { why: (p) => `Agent resource "${p.id}" is already registered.` },
+		DF0017: { why: (p) => `Failed to start MCP server (${p.transport}): ${p.reason}` },
+		DF0029: {
+			why: (p) => `Stream "${p.channel}#${p.id}" dropped ${p.dropped} chunk(s) after exceeding the client high-water mark.`,
+			fix: "The consumer is too slow for the producer. Raise `highWaterMark` on the subscription, slow the producer, or batch chunks."
+		},
+		DF0030: {
+			why: (p) => `Stream "${p.channel}#${p.id}" is unknown; no producer has called \`channel.start({ id: "${p.id}" })\`.`,
+			fix: "Ensure the server-side producer is running before clients subscribe, or check for typos in the stream id."
+		},
+		DF0031: {
+			why: (p) => `Cannot write to closed stream "${p.channel}#${p.id}".`,
+			fix: "Track the producer lifecycle by guarding writes with the `stream.signal.aborted` flag."
+		},
+		DF0032: {
+			why: (p) => `Streaming channel "${p.channel}" is already registered.`,
+			fix: "Each channel name must be unique within a context. Pick a different name or reuse the existing channel handle."
+		},
+		DF0033: {
+			why: (p) => `Failed to start dev RPC bridge for "${p.id}": ${p.reason}`,
+			fix: "Verify the bridge port is free and the devframe setup function does not throw. Pin a port via `cli.port` / `cli.portRange` on the definition, or via `port` on `devframeViteBridge` (`@devframes/vite`)."
+		},
+		DF0034: {
+			why: (p) => `Scoped RPC registration for namespace "${p.namespace}" received an already-namespaced function name "${p.name}".`,
+			fix: "A scoped context auto-namespaces ids. Pass a bare name without a \":\" separator (e.g. `register({ name: \"get-cwd\" })`), or use the unscoped `ctx.base.rpc.register` for a fully-qualified name."
+		},
+		DF0035: {
+			why: (p) => `Failed to persist storage file: ${p.filepath}`,
+			fix: "Check that the storage directory is writable and has free space."
+		},
+		DF0036: {
+			why: (p) => `RPC call to "${p.name}" was rejected: the caller is not authorized.`,
+			fix: "Complete the auth handshake (or connect with a static/pre-shared token) before calling a trusted method. Untrusted callers may only call `anonymous:`-prefixed methods; see `isAnonymousRpcMethod`."
+		},
+		DF0037: {
+			why: (p) => `A service is already provided under "${p.id}".`,
+			fix: "Service ids are unique per context. Revoke the existing provider first (the `provide()` call returns a revoke function), or namespace the id with your plugin id to avoid collisions."
+		},
+		DF0042: {
+			why: (p) => `"${p.id}" declares \`capabilities.build: false\`, so its static export is not meaningful (writes are excluded and any live-served data won't be there).`,
+			fix: "Pass `{ force: true }` to `createBuild()` if the degraded export is still useful to you, or drop `capabilities.build: false` on the definition."
+		},
+		DF0045: {
+			why: (p) => `Failed to update the devframe instance registry at "${p.file}": ${p.reason}`,
+			fix: "Discovery tooling (`devframe connect`) will not see this instance. Check that the registry directory is writable, point `DEVFRAME_INSTANCES_DIR` at a writable directory, or set `DEVFRAME_DISABLE_INSTANCE_REGISTRY=1` to opt out of registration."
+		},
+		DF0046: {
+			why: (p) => `\`devframe connect\` requires the optional peer dependency @devframes/agentic: ${p.reason}`,
+			fix: "Install it next to devframe (e.g. `npm install @devframes/agentic`) and run `devframe connect` again."
+		},
+		DF0047: {
+			why: (p) => `Agent tool "${p.id}" is hidden from the MCP surface: its wire name "${p.name}" collides with the tool "${p.existing}".`,
+			fix: "Wire names derive from tool ids (characters outside [a-zA-Z0-9_-] become \"_\"). Rename one of the two ids so they sanitize to distinct names."
+		},
+		DF0048: {
+			why: (p) => `Unknown shared-state key "${p.key}".`,
+			fix: "Call the devframe_state_read tool without arguments to list the available keys, then retry with one of them."
+		},
+		DF0049: {
+			why: "The devframe_connect_call-tool tool requires { port: number, tool: string }.",
+			fix: "Call devframe_connect_list-instances to get the port and tool names, then retry."
+		},
+		DF0050: {
+			why: (p) => `No running devframe instance on port ${p.port}.`,
+			fix: "Call devframe_connect_list-instances for the current instance list; the instance may have stopped or changed port."
+		},
+		DF0051: {
+			why: (p) => `The devframe instance on port ${p.port} has no MCP endpoint.`,
+			fix: "Restart the instance with the --mcp flag to expose its tools, then list instances again."
+		},
+		DF0052: {
+			why: (p) => `Failed to listen on ${p.host}:${p.port}: ${p.reason}`,
+			fix: "The port is likely already taken by another process (often a previous devframe instance). Free it, or pick another via `--port`, `cli.port` / `cli.portRange` on the definition, or `port` on `devframeViteBridge` (`@devframes/vite`). The original node error is available as `error.cause`."
+		},
+		DF0054: {
+			why: (p) => `connectionMeta() was called before initDevframe("${p.id}") finished initializing.`,
+			fix: "Await `instance.ready` (or any request through `instance.handler`) before reading `connectionMeta()`; the WebSocket binding it describes is only known once initialization completes."
+		},
+		DF0055: {
+			why: (p) => `This instance already owns its WebSocket transport (${p.tier}), so it cannot take over the host's upgrade events.`,
+			fix: "Drop `handleUpgrade`/`attach` and let the configured transport serve the socket, or remove `server` / `ws.port` / `ws.sidecar` from the options so the instance leaves the binding to you."
+		},
+		DF0056: {
+			why: (p) => `This instance advertises an external WebSocket endpoint (${p.url}), so it serves no socket of its own.`,
+			fix: "The server behind `ws.url` owns the transport (and its auth). Drop `ws.url` to have the instance serve the socket, or pair it with `server` / `ws.port` / `ws.sidecar` for the tunnel pattern, where a local binding is advertised through the relay."
+		},
+		DF0057: {
+			why: () => "This instance disables its WebSocket transport (`ws: false`), so there is no socket to drive upgrades into.",
+			fix: "Clients connect over the SSE endpoint instead, so no upgrade wiring is needed. Remove `ws: false` if the instance should serve a WebSocket after all."
+		},
+		DF0058: {
+			why: (p) => `"${p.id}" declares \`capabilities.dev: false\`, so it does not support a live dev server (its value is a static export only).`,
+			fix: "Pass `{ force: true }` to `createDevServer()` to run it anyway, or drop `capabilities.dev: false` on the definition."
+		},
+		DF0059: {
+			why: (p) => `Failed to fetch the file listing for "${p.package}@${p.version}" from ${p.provider}: ${p.reason}`,
+			fix: "Requests fall back to probing the provider per file. Check network access to the provider, or install the assets package locally so no listing is needed."
+		},
+		DF0060: {
+			why: (p) => `Failed to fetch a remote asset of "${p.package}" (${p.url}): ${p.reason}`,
+			fix: "Install the assets package locally (`npm install <package>`) to serve it with zero network, or check network access to the configured provider."
+		},
+		DF0061: {
+			why: (p) => `The locally installed "${p.package}@${p.installed}" is a different major version than the required "${p.required}".`,
+			fix: "Align the installed assets package with the version its node package declares; they are published in lockstep."
+		},
+		DF0062: {
+			why: (p) => `The locally installed "${p.package}@${p.installed}" differs from the required "${p.required}"; serving the installed one.`,
+			fix: "Install the exact declared version to serve byte-identical assets."
+		},
+		DF0063: {
+			why: (p) => `Failed to persist a remote asset into the cache at "${p.filepath}": ${p.reason}`,
+			fix: "The response was still served; only caching failed. Check that the cache directory is writable and has free space."
+		},
+		DF0064: {
+			why: (p) => `Failed to materialize the remote assets of "${p.package}@${p.version}": ${p.reason}`,
+			fix: "Static builds need every asset file up front. Install the assets package locally, or ensure the provider (and its file-listing API) is reachable during the build."
+		},
+		DF0065: {
+			why: (p) => `Invalid remote-assets ${p.field} "${p.value}".`,
+			fix: "A remote-assets `package` must be a valid npm package name and `version` an exact semver version (e.g. `1.2.3`); they are interpolated into CDN URLs and the cache path."
+		},
+		DF0066: {
+			why: (p) => `Service "${p.package}" is already installed; keeping the first installation and ignoring this one's options.`,
+			fix: "Option sets only merge before `ctx.services.ready()` fires. Install the service (or declare it in `DevframeDefinition.services`) before the barrier so its options join the merge."
+		},
+		DF0067: {
+			why: (p) => `Failed to import the required service package "${p.package}": ${p.reason}`,
+			fix: "Install the service package next to whoever declares it (a plugin declaring it in `services` should list it in its own dependencies), or drop `required: true` to degrade gracefully when it is absent."
+		},
+		DF0068: {
+			why: (p) => `The installed service "${p.package}@${p.installed}" does not satisfy the required range "${p.required}".`,
+			fix: "Align the installed service package with the range its declarer requires, or drop `required: true` to downgrade the mismatch to a warning."
+		},
+		DF0069: {
+			why: (p) => `The installed service "${p.package}@${p.installed}" does not satisfy the declared range "${p.required}"; installing it anyway.`,
+			fix: "The advertised meta carries the real version, so clients can gate on it. Align the installed service package with the declared range to silence this warning."
+		},
+		DF0070: {
+			why: (p) => `Invalid service "${p.package}": ${p.reason}`,
+			fix: "A service package's default export must be a factory returning a `DevframeServiceDefinition`, an object with `package`, `version`, `scope`, and a `setup` function."
+		},
+		DF0072: {
+			why: (p) => `\`rpc.snapshot\` names "${p.method}", but no RPC function is registered under that id, so nothing to bake into the static build.`,
+			fix: "Check the method id, and ensure the service/plugin that registers it is installed (e.g. declared in `services`) before the build collects the dump."
+		},
+		DF0075: {
+			why: (p) => `On ${p.runtime} the shared server's WebSocket upgrade needs crossws's Node adapter, which refuses to run off Node, and SSE is disabled, so this instance advertises no RPC transport at all.`,
+			fix: "Keep the SSE endpoint enabled (drop `sse: false`) so clients connect over it on Bun/Deno, or move the socket to a side-car (`ws: { sidecar: true }`) which binds the native WebSocket adapter on its own port."
+		},
+		DF0076: {
+			why: (p) => `\`attach\` / \`handleUpgrade\` drive a raw \`node:http\` upgrade into crossws's Node adapter, which refuses to run on ${p.runtime}.`,
+			fix: "On Bun/Deno, serve the advertised `__ws` route from `Bun.serve` / `Deno.serve` with `attachBunWsTransport` / `attachDenoWsTransport` (see the hub-deno example), or connect over the SSE endpoint instead."
+		},
+		DF0078: {
+			why: "This devframe exposes agent tools, but the MCP endpoint stays off: the optional peer \"@devframes/agentic\" is not installed.",
+			fix: "Install `@devframes/agentic` next to devframe to serve the MCP endpoint, or set `mcp: false` to opt out silently."
+		},
+		DF0079: {
+			why: (p) => `The \`mcp\` option is enabled, but the optional peer "@devframes/agentic" could not be loaded: ${p.reason}`,
+			fix: "Install `@devframes/agentic` next to devframe (the MCP adapter and the MCP SDK live there), or remove the explicit `mcp` setting."
+		},
+		DF0081: {
+			why: (p) => `Tool "${p.name}" returned invalid MCP content blocks: ${p.reason}`,
+			fix: "Pass `withMcpContent` a non-empty array of `{ type: 'text', text }`, `{ type: 'image', data, mimeType }` or `{ type: 'audio', data, mimeType }` blocks, with string fields and base64 `data`."
+		}
+	}
+});
+//#endregion
+export { diagnostics as t };

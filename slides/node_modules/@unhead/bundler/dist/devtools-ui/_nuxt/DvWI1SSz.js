@@ -1,0 +1,1 @@
+function e(e){if(!e)return;let t=`/__open-in-editor?file=${encodeURIComponent(e)}`;fetch(t).then(e=>{if(!e.ok)throw Error(`/__open-in-editor responded ${e.status}`)}).catch(e=>{console.warn(`[unhead devtools] open-in-editor failed:`,e)})}export{e as t};

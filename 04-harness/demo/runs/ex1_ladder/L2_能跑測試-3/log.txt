@@ -1,0 +1,87 @@
+[System]
+你是一位工程師，在一個 Python 專案資料夾裡工作，請用繁體中文。
+每一輪只能回覆一個 JSON，不要有其他文字。你能用的工具：
+- {"tool": "list_files"}　列出專案裡的所有檔案
+- {"tool": "read_file", "path": "檔名"}　讀一個檔案
+- {"tool": "write_file", "path": "檔名", "content": "完整內容"}　整個檔案覆寫
+- {"tool": "run_tests"}　在沙箱裡跑講師的驗收測試，回傳結果重點
+- {"tool": "done", "summary": "你做了什麼"}　完成任務
+
+[Human]
+客人抱怨：金卡會員買 199 元的商品，結帳畫面顯示 159.20000000000002 元。請修好 shop/discount.py，計算規則請照 README.md。
+
+[AI]
+{"tool": "list_files"}
+
+[工具結果]
+README.md
+shop/__init__.py
+shop/discount.py
+shop/rates.py
+
+[AI]
+{"tool": "read_file", "path": "README.md"}
+
+[工具結果]
+# 迷你商店：會員價格
+
+| 會員等級 | 代號 | 折扣 |
+|---|---|---|
+| 一般 | normal | 原價 |
+| 銀卡 | silver | 95 折 |
+| 金卡 | gold | 8 折 |
+
+結帳金額一律**四捨五入到整數元**（例如 28.5 元 → 29 元）。
+
+
+[AI]
+{"tool": "read_file", "path": "shop/discount.py"}
+
+[工具結果]
+from shop.rates import RATES
+
+
+def member_price(price, level):
+    """回傳會員價格。"""
+    return price * RATES[level]
+
+
+[AI]
+{"tool": "read_file", "path": "shop/rates.py"}
+
+[工具結果]
+# 會員折扣（乘上原價）
+RATES = {"normal": 1.0, "silver": 0.95, "gold": 0.8}
+
+
+[AI]
+{"tool": "write_file", "path": "shop/discount.py", "content": "from decimal import Decimal, ROUND_HALF_UP\n\nfrom shop.rates import RATES\n\n\ndef member_price(price, level):\n    \"\"\"回傳會員價格，四捨五入到整數元（半數進位）。\"\"\"\n    # 用 Decimal 避免浮點誤差（例如 199 * 0.8 = 159.20000000000002），\n    # 並用 ROUND_HALF_UP，讓 28.5 → 29（Python 內建 round 是銀行家捨入，會變 28）。\n    total = Decimal(str(price)) * Decimal(str(RATES[level]))\n    return int(total.quantize(Decimal(\"1\"), rounding=ROUND_HALF_UP))\n"}
+
+[工具結果]
+✅ 已寫入 shop/discount.py
+
+[AI]
+{"tool": "run_tests"}
+
+[工具結果]
+ERROR: test_from_cashier (__main__.TestMemberPrice.test_from_cashier)
+KeyError: 'GOLD'
+Ran 7 tests in 0.001s
+FAILED (errors=1)
+
+[AI]
+{"tool": "write_file", "path": "shop/discount.py", "content": "from decimal import Decimal, ROUND_HALF_UP\n\nfrom shop.rates import RATES\n\n\ndef member_price(price, level):\n    \"\"\"回傳會員價格，四捨五入到整數元（半數進位）。\"\"\"\n    # 收銀台可能傳入大寫代號（例如 \"GOLD\"），統一轉成小寫再查表。\n    key = str(level).strip().lower()\n    # 用 Decimal 避免浮點誤差（例如 199 * 0.8 = 159.20000000000002），\n    # 並用 ROUND_HALF_UP，讓 28.5 → 29（Python 內建 round 是銀行家捨入，會變 28）。\n    total = Decimal(str(price)) * Decimal(str(RATES[key]))\n    return int(total.quantize(Decimal(\"1\"), rounding=ROUND_HALF_UP))\n"}
+
+[工具結果]
+✅ 已寫入 shop/discount.py
+
+[AI]
+{"tool": "run_tests"}
+
+[工具結果]
+Ran 7 tests in 0.000s
+OK
+
+[AI]
+{"tool": "done", "summary": "修好 shop/discount.py：改用 Decimal 計算，避免浮點誤差（199 × 0.8 現在得到 159.2，再四捨五入為 159 元，不再顯示 159.20000000000002）。捨入採 ROUND_HALF_UP，讓 28.5 → 29，符合 README 的半數進位規則（Python 內建 round 會是銀行家捨入）。另外，收銀台可能傳入大寫代號（如 GOLD），因此在查表前先 strip() 並轉成小寫。驗收測試 7 項全部通過。"}
+

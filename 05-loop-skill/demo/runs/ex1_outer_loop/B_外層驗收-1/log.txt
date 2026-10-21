@@ -1,0 +1,165 @@
+[外層]
+第 1 輪
+
+[System]
+你是一位工程師，在一個 Python 專案資料夾裡工作，請用繁體中文。
+每一輪只能回覆一個 JSON，不要有其他文字。你能用的工具：
+- {"tool": "list_files"}　列出專案裡的所有檔案
+- {"tool": "read_file", "path": "檔名"}　讀一個檔案
+- {"tool": "write_file", "path": "檔名", "content": "完整內容"}　整個檔案覆寫
+- {"tool": "done", "summary": "你做了什麼"}　完成任務
+
+[Human]
+客人抱怨：金卡會員買 199 元的商品，結帳畫面顯示 159.20000000000002 元。請修好 shop/discount.py，計算規則請照 README.md。
+
+[AI]
+{"tool": "list_files"}
+
+[工具結果]
+README.md
+shop/__init__.py
+shop/discount.py
+shop/rates.py
+
+[AI]
+{"tool": "read_file", "path": "README.md"}
+
+[工具結果]
+# 迷你商店：會員價格
+
+| 會員等級 | 代號 | 折扣 |
+|---|---|---|
+| 一般 | normal | 原價 |
+| 銀卡 | silver | 95 折 |
+| 金卡 | gold | 8 折 |
+
+結帳金額一律**四捨五入到整數元**（例如 28.5 元 → 29 元）。
+
+
+[AI]
+{"tool": "read_file", "path": "shop/discount.py"}
+
+[工具結果]
+from shop.rates import RATES
+
+
+def member_price(price, level):
+    """回傳會員價格。"""
+    return price * RATES[level]
+
+
+[AI]
+{"tool": "read_file", "path": "shop/rates.py"}
+
+[工具結果]
+# 會員折扣（乘上原價）
+RATES = {"normal": 1.0, "silver": 0.95, "gold": 0.8}
+
+
+[AI]
+{"tool": "write_file", "path": "shop/discount.py", "content": "from decimal import Decimal, ROUND_HALF_UP\n\nfrom shop.rates import RATES\n\n\ndef member_price(price, level):\n    \"\"\"回傳會員價格，四捨五入到整數元（半數進位）。\n\n    改用 Decimal 計算，避免浮點數誤差（例如 159.20000000000002）影響進位結果。\n    \"\"\"\n    exact = Decimal(str(price)) * Decimal(str(RATES[level]))\n    return int(exact.quantize(Decimal(\"1\"), rounding=ROUND_HALF_UP))\n"}
+
+[工具結果]
+✅ 已寫入 shop/discount.py
+
+[AI]
+{"tool": "done", "summary": "已修正 shop/discount.py 的 member_price：改用 Decimal（以 str() 轉換價格與折扣率）計算，避免浮點數誤差，並以 ROUND_HALF_UP 四捨五入到整數元，回傳 int。金卡買 199 元的商品現在會得到 159 元，而不是 159.20000000000002。計算規則依 README.md：一般原價、銀卡 95 折、金卡 8 折，結帳金額四捨五入到整數元（例如 28.5 → 29）。"}
+
+[外層驗收]
+ERROR: test_from_cashier (__main__.TestMemberPrice.test_from_cashier)
+KeyError: 'GOLD'
+Ran 7 tests in 0.001s
+FAILED (errors=1)
+
+[外層]
+第 2 輪
+
+[System]
+你是一位工程師，在一個 Python 專案資料夾裡工作，請用繁體中文。
+每一輪只能回覆一個 JSON，不要有其他文字。你能用的工具：
+- {"tool": "list_files"}　列出專案裡的所有檔案
+- {"tool": "read_file", "path": "檔名"}　讀一個檔案
+- {"tool": "write_file", "path": "檔名", "content": "完整內容"}　整個檔案覆寫
+- {"tool": "done", "summary": "你做了什麼"}　完成任務
+
+[Human]
+客人抱怨：金卡會員買 199 元的商品，結帳畫面顯示 159.20000000000002 元。請修好 shop/discount.py，計算規則請照 README.md。
+
+你上一輪說完成了，但我的驗收沒通過，證據：
+ERROR: test_from_cashier (__main__.TestMemberPrice.test_from_cashier)
+KeyError: 'GOLD'
+Ran 7 tests in 0.001s
+FAILED (errors=1)
+
+[AI]
+{"tool": "list_files"}
+
+[工具結果]
+README.md
+shop/__init__.py
+shop/discount.py
+shop/rates.py
+
+[AI]
+{"tool": "read_file", "path": "README.md"}
+
+[工具結果]
+# 迷你商店：會員價格
+
+| 會員等級 | 代號 | 折扣 |
+|---|---|---|
+| 一般 | normal | 原價 |
+| 銀卡 | silver | 95 折 |
+| 金卡 | gold | 8 折 |
+
+結帳金額一律**四捨五入到整數元**（例如 28.5 元 → 29 元）。
+
+
+[AI]
+{"tool": "read_file", "path": "shop/discount.py"}
+
+[工具結果]
+from decimal import Decimal, ROUND_HALF_UP
+
+from shop.rates import RATES
+
+
+def member_price(price, level):
+    """回傳會員價格，四捨五入到整數元（半數進位）。
+
+    改用 Decimal 計算，避免浮點數誤差（例如 159.20000000000002）影響進位結果。
+    """
+    exact = Decimal(str(price)) * Decimal(str(RATES[level]))
+    return int(exact.quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+
+
+[AI]
+{"tool": "read_file", "path": "shop/rates.py"}
+
+[工具結果]
+# 會員折扣（乘上原價）
+RATES = {"normal": 1.0, "silver": 0.95, "gold": 0.8}
+
+
+[AI]
+{"tool": "write_file", "path": "shop/discount.py", "content": "from decimal import Decimal, ROUND_HALF_UP\n\nfrom shop.rates import RATES\n\n\ndef member_price(price, level):\n    \"\"\"回傳會員價格，四捨五入到整數元（半數進位）。\n\n    會員代號不分大小寫（例如 'GOLD' 與 'gold' 視為相同），\n    以符合收銀端傳入的各種寫法。\n\n    改用 Decimal 計算，避免浮點數誤差（例如 159.20000000000002）影響進位結果。\n    \"\"\"\n    code = str(level).strip().lower()\n    if code not in RATES:\n        raise ValueError(f\"未知的會員等級: {level!r}\")\n    exact = Decimal(str(price)) * Decimal(str(RATES[code]))\n    return int(exact.quantize(Decimal(\"1\"), rounding=ROUND_HALF_UP))\n"}
+
+[工具結果]
+✅ 已寫入 shop/discount.py
+
+[AI]
+{"tool": "list_files"}
+
+[工具結果]
+README.md
+shop/__init__.py
+shop/discount.py
+shop/rates.py
+
+[AI]
+{"tool": "done", "summary": "修改 shop/discount.py：member_price 現在會先把等級代號去除空白並轉小寫（例如 'GOLD' 會視為 'gold'），再查 RATES，所以不會再出現 KeyError: 'GOLD'。金卡買 199 元計算為 199 × 0.8 = 159.2，經 Decimal 四捨五入後回傳 159，不再出現 159.20000000000002。未知的等級現在會丟出 ValueError（原本是 KeyError）。注意：(1) 我沒有執行測試，因為目前工具無法跑測試，請重新執行 test_from_cashier 與其餘測試確認。(2) README 只定義小寫代號，大小寫不分是我為了相容收銀端寫法所做的假設，若規格不允許，應改由收銀端統一傳小寫。(3) 先前我沒有正式呼叫 done 就說已完成，這次的結論應以你重新跑測試的結果為準。"}
+
+[外層驗收]
+Ran 7 tests in 0.000s
+OK
+

@@ -1,0 +1,34 @@
+[System]
+你是一位工程師，請用繁體中文。
+
+[Human]
+客人抱怨：金卡會員買 199 元的商品，結帳畫面顯示 159.20000000000002 元。請修好 shop/discount.py，計算規則請照 README.md。
+請直接回覆修好後的 shop/discount.py 完整內容，放在一個 ```python 區塊裡。
+
+[AI]
+我目前看不到 `shop/discount.py` 和 `README.md` 的內容，這次對話裡也沒有提供檔案，所以無法產出修好後的完整檔案。如果我直接編一份，很可能和你的實際程式與計算規則對不上。
+
+**問題原因**：浮點數（`float`）無法精確表示小數，`199 * 0.8` 會得到 `159.20000000000002`。金額計算通常應改用 `Decimal`，並依 README 規定的捨入方式處理到分（小數點後兩位）。
+
+請把以下內容貼給我，我就能給出完整的修正版：
+
+1. `shop/discount.py` 的完整內容
+2. `README.md` 中關於會員折扣與捨入的規則（例如：金卡打幾折、是否四捨五入或無條件捨去、捨入發生在單品還是總額）
+3. 相關的測試檔（如果有），或結帳時呼叫此模組的程式碼
+
+在等待你提供檔案時，這是常見的修正方式，示意用，尚未套用你的規則：
+
+```python
+from decimal import Decimal, ROUND_HALF_UP
+
+def apply_discount(price, rate):
+    """price 與 rate 皆以字串或整數傳入，避免浮點誤差。"""
+    total = Decimal(str(price)) * Decimal(str(rate))
+    return total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+# 例：金卡 8 折
+# apply_discount(199, "0.8") -> Decimal('159.20')
+```
+
+提供檔案後，我會依 README 的規則把它改成正確版本，並保留原有的函式介面。
+

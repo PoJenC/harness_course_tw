@@ -1,0 +1,3 @@
+import { a as normalizeHubBase, i as DOCK_RENDERERS_STATE_KEY, n as DEFAULT_STATE_USER_SETTINGS, o as HUB_EVENTS, r as DEVFRAMES_HUB_BASE, t as DEFAULT_CATEGORIES_ORDER } from "./constants-C7cDDASI.mjs";
+export * from "devframe/constants";
+export { DEFAULT_CATEGORIES_ORDER, DEFAULT_STATE_USER_SETTINGS, DEVFRAMES_HUB_BASE, DOCK_RENDERERS_STATE_KEY, HUB_EVENTS, normalizeHubBase };

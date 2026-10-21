@@ -1,0 +1,167 @@
+/* 全場共用樣式：Slidev 會自動載入專案根目錄的 style.css */
+:root {
+  --slidev-theme-primary: #2f6f7e;
+  --c-accent: #e07a2f;
+  --c-soft: #eef5f7;
+}
+
+.slidev-layout h2 {
+  color: var(--slidev-theme-primary);
+  font-weight: 700;
+  border-bottom: 3px solid var(--c-soft);
+  padding-bottom: 0.25rem;
+  margin-bottom: 0.9rem;
+}
+
+/* 粗體：主題色 */
+.slidev-layout strong {
+  color: #1f4f5a;
+}
+
+/* 📌 ⚡ 🎲 引言：做成重點色塊 */
+.slidev-layout blockquote {
+  border-left: 5px solid var(--c-accent);
+  background: #fff6ee;
+  border-radius: 6px;
+  padding: 0.55rem 1rem;
+  font-size: 1rem;
+  color: #3a3a3a;
+}
+
+.slidev-layout blockquote strong {
+  color: #b4531a;
+}
+
+/* 表格：表頭底色、斑馬紋 */
+.slidev-layout table {
+  font-size: 0.92em;
+}
+
+.slidev-layout th,
+.slidev-layout td {
+  padding-top: 0.4rem;
+  padding-bottom: 0.4rem;
+}
+
+.slidev-layout thead th {
+  background: var(--c-soft);
+  color: #1f4f5a;
+  font-weight: 700;
+}
+
+.slidev-layout tbody tr:nth-child(even) {
+  background: #f8fbfc;
+}
+
+/* 來源、註解（<span>）：小字灰色 */
+.slidev-layout > p > span:only-child {
+  font-size: 0.72rem;
+  color: #888;
+}
+
+/* 程式碼區塊 */
+.slidev-layout pre {
+  border-radius: 8px;
+}
+
+/* 章節封面（layout: section） */
+.slidev-layout.section {
+  background: linear-gradient(135deg, #2f6f7e 0%, #1f4f5a 100%);
+  color: #fff;
+}
+
+.slidev-layout.section h1 {
+  color: #fff;
+  font-size: 3.4rem;
+  font-weight: 900;
+}
+
+.slidev-layout.section h1 + p {
+  opacity: 0.85;
+  font-size: 1.4rem;
+}
+
+/* 封面 */
+.slidev-layout.cover.hero {
+  background: radial-gradient(circle at 85% 20%, #3d8a9b 0%, transparent 45%),
+    linear-gradient(135deg, #1f4f5a 0%, #12313a 100%) !important;
+  color: #fff;
+  text-align: center;
+}
+
+.slidev-layout.cover.hero h1 {
+  color: #fff;
+  font-size: 3.2rem;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.slidev-layout.cover.hero h1 + p {
+  opacity: 0.8;
+  font-size: 1.3rem;
+  margin-top: 0.4rem;
+}
+
+.hero-tags {
+  display: flex;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.hero-tags .tag {
+  padding: 0.2rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.hero-tags .guess {
+  background: #f2c14e;
+  color: #3a2a00;
+}
+
+.hero-tags .short {
+  background: var(--c-accent);
+  color: #fff;
+}
+
+.hero-stat {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.2rem;
+  margin-top: 1.6rem;
+}
+
+.hero-stat > div:not(.arrow) {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 0.5rem 1.1rem;
+}
+
+.hero-stat b {
+  font-size: 2rem;
+  font-weight: 900;
+}
+
+.hero-stat span {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.hero-stat .arrow {
+  font-size: 2rem;
+  opacity: 0.7;
+}
+
+.hero-foot {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 2rem;
+  font-size: 0.85rem;
+  opacity: 0.7;
+}

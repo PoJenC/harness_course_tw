@@ -1,0 +1,41 @@
+[System]
+你是一位工程師，請用繁體中文。
+
+[Human]
+客人抱怨：金卡會員買 199 元的商品，結帳畫面顯示 159.20000000000002 元。請修好 shop/discount.py，計算規則請照 README.md。
+請直接回覆修好後的 shop/discount.py 完整內容，放在一個 ```python 區塊裡。
+
+[AI]
+我无法读取你的 `shop/discount.py` 和 `README.md`，所以没有看到原始程序和确切的计算规则。下面是根据症状推断的修正版本，请先对照 README 确认后再使用。
+
+**问题原因：** 浮点数运算的误差。`199 * 0.8` 在二进制浮点数中无法精确表示，结果会是 `159.20000000000002`。金额计算应该改用 `Decimal`。
+
+**推断的规则（需用 README 确认）：**
+- 金卡会员打 8 折（199 × 0.8 = 159.2，与客诉金额吻合）
+- 金额保留到小数点后两位，四捨五入
+
+```python
+from decimal import Decimal, ROUND_HALF_UP
+
+# 會員折扣率（金卡 = 8 折，依客訴金額推斷；請以 README.md 為準）
+MEMBER_DISCOUNT_RATES = {
+    "gold": Decimal("0.80"),
+}
+DEFAULT_RATE = Decimal("1.00")
+CENT = Decimal("0.01")
+
+
+def calculate_final_price(price, member_level=None):
+    """回傳折扣後金額（Decimal，四捨五入到小數點後兩位）。"""
+    # 用 str() 轉換，避免 float 誤差進入計算
+    base = Decimal(str(price))
+    rate = MEMBER_DISCOUNT_RATES.get(member_level, DEFAULT_RATE)
+    return (base * rate).quantize(CENT, rounding=ROUND_HALF_UP)
+```
+
+要讓我產出與原檔完全相容的版本，請提供：
+1. `shop/discount.py` 的原始內容（特別是函式名稱與參數）
+2. `README.md` 中關於折扣與捨入的規則
+
+拿到這兩份後，我會保留原有的函式介面，只修正計算部分。
+

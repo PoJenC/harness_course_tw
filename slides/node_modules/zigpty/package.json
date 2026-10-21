@@ -1,0 +1,38 @@
+{
+  "name": "zigpty",
+  "version": "0.2.1",
+  "repository": "pithings/zigpty",
+  "workspaces": [
+    "playground"
+  ],
+  "files": [
+    "dist",
+    "prebuilds"
+  ],
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./osc": "./dist/osc/index.mjs",
+    "./idle": "./dist/idle/index.mjs"
+  },
+  "scripts": {
+    "build": "zig build --release && obuild",
+    "build:zig": "zig build --release",
+    "build:zig:debug": "zig build",
+    "fmt": "oxfmt . && zig fmt zig/",
+    "fmt:check": "oxfmt --check . && zig fmt --check zig/",
+    "test": "zig build test && vitest run",
+    "test:bun": "zig build test && bun test",
+    "release": "bun run test && changelogen --release --push"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.11",
+    "@types/node": "^25.5.2",
+    "changelogen": "^0.6.2",
+    "obuild": "^0.4.33",
+    "oxfmt": "^0.44.0",
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.3"
+  },
+  "packageManager": "bun@1.3.11"
+}

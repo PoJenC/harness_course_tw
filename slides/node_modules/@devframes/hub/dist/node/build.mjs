@@ -1,0 +1,207 @@
+import { a as normalizeHubBase, i as DOCK_RENDERERS_STATE_KEY } from "../constants-BSPQmlA1.mjs";
+import { t as createHubContext, y as diagnostics } from "../context-DRdTViYd.mjs";
+import { i as resolveRendererRegistrations, n as renderClientImportsModule, r as resolveDevframesInput, t as mountDevframes } from "../assemble-CK2TX0FM.mjs";
+import { joinURL } from "devframe/utils/url";
+import { DEVFRAME_CONNECTION_META_FILENAME, DEVFRAME_DOCK_IMPORTS_FILENAME } from "devframe/constants";
+import { existsSync } from "node:fs";
+import fs from "node:fs/promises";
+import process from "node:process";
+import { createH3DevframeHost } from "devframe/internal";
+import { collectStaticRpcDump, writeStaticRpcDump } from "devframe/rpc/dump";
+import { colors } from "devframe/utils/colors";
+import { resolveStaticAssetsSource } from "devframe/utils/remote-assets";
+import { dirname, resolve } from "pathe";
+//#region src/node/build.ts
+/**
+* Produce a self-contained static deploy of a whole hub, the multi-devframe
+* counterpart of devframe's `createBuild`:
+*
+*   - Build a `mode: 'build'` hub context and mount every devframe (or reuse a
+*     `context` a host mounted itself): each SPA is copied to `<outDir>/<id>/`,
+*     an absolute-path page script to `<outDir>/<id>/__page-script/`, and its
+*     `setup(ctx)` runs.
+*   - Copy the UI slot's viewer SPA, `embedded.js`, and the renderer
+*     modules, and write the discovery documents (`__index.json`,
+*     `__client-imports.js`).
+*   - Write `__connection.json` (`{ backend: 'static' }`, carrying
+*     `ctx.staticConfig` as `configs`) at the hub base and at every frame
+*     base (each pointing back at the hub's own meta via `baseUrl`).
+*   - Bake the shared RPC dump under `<outDir>/__rpc-dump/`: every
+*     `static`/`snapshot` RPC plus a snapshot of each shared-state key
+*     (docks, commands, renderer manifest), so `createDevframeClientRuntime`
+*     and every frame SPA boot from the dump with no live server.
+*
+* Reads work from the baked dump; live writes (messages, terminals, commands
+* execution) have no server and degrade to no-ops in the clients.
+*/
+async function buildHub(options) {
+	if (options.context && options.devframes?.length) throw diagnostics.DF8002();
+	const base = normalizeHubBase(options.base ?? "/__devframes/");
+	const cwd = options.cwd ?? process.cwd();
+	const outDir = resolve(cwd, options.outDir);
+	const rendererRegistrations = resolveRendererRegistrations(options.renderers ?? []);
+	const ctx = options.context ?? await createAndMountContext(options, base, cwd);
+	await options.configure?.(ctx);
+	await options.ui?.setup?.(ctx);
+	if (options.clean !== false && existsSync(outDir)) await fs.rm(outDir, { recursive: true });
+	await fs.mkdir(outDir, { recursive: true });
+	/**
+	* Map a served URL base to its on-disk location. A base under the hub
+	* {@link base} writes into the hub subtree at `outDir` (so `outDir`
+	* corresponds to the hub base). A base outside it is a deploy-root sibling:
+	* `outDir`'s parent is the deploy root, and the base resolves under it by its
+	* absolute path. This is the layout Vite DevTools serves, where devframe SPAs
+	* and assets sit beside `/__devtools/` rather than under it.
+	*/
+	const deployRoot = dirname(outDir);
+	const resolveOutPath = (urlBase) => {
+		if (urlBase.startsWith(base)) return resolve(outDir, urlBase.slice(base.length));
+		if (!urlBase.startsWith("/")) throw diagnostics.DF8006({
+			urlBase,
+			base
+		});
+		return resolve(deployRoot, urlBase.slice(1));
+	};
+	await copyBuildStatics(ctx, resolveOutPath);
+	await publishRendererManifest(ctx, rendererRegistrations, base, outDir);
+	await writeUiArtifacts(options.ui, outDir);
+	await fs.writeFile(resolve(outDir, DEVFRAME_DOCK_IMPORTS_FILENAME), renderClientImportsModule(ctx), "utf-8");
+	await writeHubIndex(ctx, base, outDir, options);
+	await writeConnectionMetas(ctx, base, outDir, resolveOutPath);
+	console.log(colors.cyan`[devframes-hub] writing RPC dump to ${resolve(outDir, "__rpc-dump")}`);
+	const dump = await collectStaticRpcDump(ctx.rpc.definitions.values(), ctx);
+	await writeStaticRpcDump(dump, outDir, { pretty: options.pretty });
+	const count = ctx.frames.length;
+	console.log(colors.green`[devframes-hub] built ${count} devframe${count === 1 ? "" : "s"} -> ${outDir}`);
+}
+/**
+* Build a `mode: 'build'` hub context and mount the `devframes` input. The host
+* copies nothing live (`mountStatic`/`mountConnectionMeta` are no-ops): every
+* static is copied afterwards from `ctx.views.buildStaticDirs`, and each frame's
+* meta is written from `ctx.frames`.
+*/
+async function createAndMountContext(options, base, cwd) {
+	const host = {
+		...createH3DevframeHost({
+			origin: "http://localhost",
+			appName: "devframes",
+			workspaceRoot: cwd,
+			mount: () => {}
+		}),
+		...options.getStorageDir ? { getStorageDir: options.getStorageDir } : {},
+		mountConnectionMeta: () => {}
+	};
+	const ctx = await createHubContext({
+		cwd,
+		workspaceRoot: cwd,
+		mode: "build",
+		host,
+		...options.rpcDeclarations ? { builtinRpcDeclarations: options.rpcDeclarations } : {}
+	});
+	const devframes = await resolveDevframesInput(options.devframes ?? []);
+	for (const input of options.services ?? []) ctx.services.install(input);
+	const setups = await mountDevframes(ctx, devframes, base);
+	await ctx.services.ready();
+	for (const run of setups) await run();
+	return ctx;
+}
+/**
+* Copy every static the context registered through `ctx.views.hostStatic`
+* (recorded in `ctx.views.buildStaticDirs`): a local dir verbatim, a remote
+* source by materializing every listed file. Reads the list rather than
+* relying on a live host `mountStatic`, so a context whose host copied no
+* statics at mount time (the build host, or a kit's) still gets its assets in.
+* Each source re-resolves with the `resolveFrom` it was mounted with, so a
+* remote source (e.g. a plugin's `--assets` package) resolves to the same
+* locally-installed copy it would serve live.
+*/
+async function copyBuildStatics(ctx, resolveOutPath) {
+	const storageDir = ctx.host.getStorageDir("project");
+	for (const { baseUrl, source, resolveFrom } of ctx.views.buildStaticDirs) {
+		const target = resolveOutPath(baseUrl);
+		const resolved = resolveStaticAssetsSource(source, storageDir, resolveFrom);
+		await fs.mkdir(dirname(target), { recursive: true });
+		if (typeof resolved === "string") await fs.cp(resolved, target, { recursive: true });
+		else await resolved.materialize(target);
+	}
+}
+/**
+* Publish the renderer manifest exactly like `initHub` does, so it is baked
+* into the shared-state snapshot, and copy each prebuilt module to the URL
+* the manifest advertises.
+*/
+async function publishRendererManifest(ctx, registrations, base, outDir) {
+	const manifest = {};
+	for (const registration of registrations) {
+		manifest[registration.type] = {
+			importFrom: joinURL(base, "__renderers", `${registration.type}.mjs`),
+			...registration.importName ? { importName: registration.importName } : {}
+		};
+		await fs.mkdir(resolve(outDir, "__renderers"), { recursive: true });
+		await fs.copyFile(registration.file, resolve(outDir, "__renderers", `${registration.type}.mjs`));
+	}
+	(await ctx.rpc.sharedState.get(DOCK_RENDERERS_STATE_KEY, { initialValue: {} })).mutate(() => manifest);
+}
+/**
+* Copy the UI slot's artifacts: the viewer SPA owns the hub base (copied
+* before the discovery documents, so those win over same-named files it
+* ships), `embedded.js` next to it, plus any produced assets.
+*/
+async function writeUiArtifacts(ui, outDir) {
+	if (ui?.viewer) await fs.cp(resolve(ui.viewer.distDir), outDir, { recursive: true });
+	if (ui?.embedded) await fs.copyFile(resolve(ui.embedded.entry), resolve(outDir, "embedded.js"));
+	for (const [key, produce] of Object.entries(ui?.assets ?? {})) {
+		const target = resolve(outDir, key);
+		await fs.mkdir(dirname(target), { recursive: true });
+		await fs.writeFile(target, produce());
+	}
+}
+/** Write `<base>__index.json`: the discovery document listing every frame. */
+async function writeHubIndex(ctx, base, outDir, options) {
+	await fs.writeFile(resolve(outDir, "__index.json"), `${JSON.stringify({
+		name: options.name,
+		version: options.version,
+		base,
+		frames: ctx.frames.map(({ id, base, title }) => ({
+			id,
+			base,
+			title
+		})),
+		endpoints: {
+			connection: DEVFRAME_CONNECTION_META_FILENAME,
+			clientImports: DEVFRAME_DOCK_IMPORTS_FILENAME,
+			index: "__index.json",
+			...options.ui?.embedded ? { embedded: "embedded.js" } : {}
+		}
+	}, null, 2)}\n`, "utf-8");
+}
+/**
+* Write the `backend: 'static'` connection meta at the hub base, and a copy at
+* every frame base that served its own SPA (i.e. registered a static mount at
+* that base) whose `baseUrl` points relative resolution (the RPC dump) back at
+* the hub's own meta, so a frame SPA that fetched its per-frame copy (instead
+* of inheriting the host page's connection) still finds the shared dump.
+*/
+async function writeConnectionMetas(ctx, base, outDir, resolveOutPath) {
+	const jsonSerializableMethods = [];
+	for (const def of ctx.rpc.definitions.values()) if (def.jsonSerializable === true) jsonSerializableMethods.push(def.name);
+	const meta = {
+		backend: "static",
+		jsonSerializableMethods,
+		...Object.keys(ctx.staticConfig).length > 0 ? { configs: ctx.staticConfig } : {}
+	};
+	await fs.writeFile(resolve(outDir, DEVFRAME_CONNECTION_META_FILENAME), JSON.stringify(meta, null, 2), "utf-8");
+	const frameMeta = {
+		...meta,
+		baseUrl: joinURL(base, DEVFRAME_CONNECTION_META_FILENAME)
+	};
+	const servedBases = new Set(ctx.views.buildStaticDirs.map((dir) => dir.baseUrl));
+	for (const frame of ctx.frames) {
+		if (!servedBases.has(frame.base)) continue;
+		const target = resolve(resolveOutPath(frame.base), DEVFRAME_CONNECTION_META_FILENAME);
+		await fs.mkdir(dirname(target), { recursive: true });
+		await fs.writeFile(target, JSON.stringify(frameMeta, null, 2), "utf-8");
+	}
+}
+//#endregion
+export { buildHub };

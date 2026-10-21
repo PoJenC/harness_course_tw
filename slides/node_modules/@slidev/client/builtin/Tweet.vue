@@ -1,0 +1,82 @@
+<!--
+A simple wrapper for embedded Tweet
+
+Usage:
+
+<Tweet id="20" />
+<Tweet url="https://x.com/jack/status/20" />
+-->
+
+<script setup lang="ts">
+import { onMounted, ref } from 'vue'
+import { isDark } from '../logic/dark'
+import { resolveTweetId } from '../logic/tweet'
+
+const props = defineProps<{
+  id?: string | number
+  url?: string
+  scale?: string | number
+  conversation?: string
+  cards?: 'hidden' | 'visible'
+}>()
+
+const tweet = ref<HTMLElement | null>()
+
+const loaded = ref(false)
+const tweetNotFound = ref(false)
+
+async function create(retries = 10) {
+  const tweetId = resolveTweetId(props.id, props.url)
+  if (!tweetId) {
+    loaded.value = true
+    tweetNotFound.value = true
+    console.error('Tweet requires a valid id or X post URL.')
+    return
+  }
+
+  // @ts-expect-error global
+  if (!window.twttr?.widgets?.createTweet) {
+    if (retries <= 0)
+      return console.error('Failed to load Twitter widget after 10 retries.')
+    setTimeout(create, 1000, retries - 1)
+    return
+  }
+  // @ts-expect-error global
+  const element = await window.twttr.widgets.createTweet(
+    tweetId,
+    tweet.value,
+    {
+      theme: isDark.value ? 'dark' : 'light',
+      conversation: props.conversation || 'none',
+      cards: props.cards,
+    },
+  )
+  loaded.value = true
+  if (element === undefined)
+    tweetNotFound.value = true
+}
+
+onMounted(() => {
+  create()
+})
+</script>
+
+<template>
+  <Transform :scale="scale || 1">
+    <div ref="tweet" class="tweet slidev-tweet">
+      <div v-if="!loaded || tweetNotFound" class="w-30 h-30 my-10px bg-gray-400 bg-opacity-10 rounded-lg flex opacity-50">
+        <div class="m-auto animate-pulse text-4xl">
+          <div class="i-carbon:logo-twitter" />
+          <span v-if="tweetNotFound">Could not load tweet</span>
+        </div>
+      </div>
+    </div>
+  </Transform>
+</template>
+
+<style>
+.slidev-tweet iframe {
+  border-radius: 12px;
+  overflow: hidden;
+}
+</style>

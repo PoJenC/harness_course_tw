@@ -1,0 +1,17 @@
+{
+  "name": "harness-course-slides",
+  "private": true,
+  "scripts": {
+    "slides": "python3 build_slides.py",
+    "dev": "npm run slides && slidev slide_total.md --open",
+    "pdf": "npm run slides && slidev export slide_total.md --output output/slide_total.pdf --timeout 120000",
+    "web": "npm run slides && slidev build slide_total.md --out output/dist",
+    "preview": "python3 -m http.server 8080 --directory output/dist",
+    "all": "npm run pdf && npm run web"
+  },
+  "devDependencies": {
+    "@slidev/cli": "^53.0.0",
+    "@slidev/theme-seriph": "0.25.0",
+    "playwright-chromium": "^1.64.1"
+  }
+}

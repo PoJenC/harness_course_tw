@@ -1,0 +1,2 @@
+import { Immutable, ImmutableArray, ImmutableMap, ImmutableObject, ImmutableSet, SharedState, SharedStateEvents, SharedStateOptions, SharedStatePatch, createSharedState } from "devframe/utils/shared-state";
+export { type Immutable, type ImmutableArray, type ImmutableMap, type ImmutableObject, type ImmutableSet, type SharedState, type SharedStateEvents, type SharedStateOptions, type SharedStatePatch, createSharedState };

@@ -1,0 +1,61 @@
+import { _ as TextPropsSchema, a as CodeBlockPropsSchema, b as basePropSchemas, c as IconPropsSchema, d as ProgressPropsSchema, f as SelectPropsSchema, g as TextInputPropsSchema, h as TabsPropsSchema, i as CardPropsSchema, l as KeyValueTablePropsSchema, m as SwitchPropsSchema, n as BadgePropsSchema, o as DataTablePropsSchema, p as StackPropsSchema, r as ButtonPropsSchema, s as DividerPropsSchema, t as JSON_RENDER_INDEX_KEY, u as LinkPropsSchema, v as TreePropsSchema, y as baseComponentNames } from "./view-index-De3Gt127.mjs";
+import { defineCatalog, defineSchema } from "@json-render/core";
+//#region src/catalog.ts
+/**
+* The Devframes base-catalog schema. A Devframes spec is an
+* `@json-render/core` `Spec` (flat `root` + `elements` map); the structural
+* fields upstream's Vue schema omits (`state`, `on`, `repeat`, `watch`) pass
+* through unchecked. The one validation Devframes adds is per-component prop
+* validation (see {@link basePropSchemas}).
+*/
+const baseSchema = defineSchema((s) => ({
+	spec: s.object({
+		root: s.string(),
+		elements: s.record(s.object({
+			type: s.ref("catalog.components"),
+			props: s.propsOf("catalog.components"),
+			children: s.array(s.string())
+		}))
+	}),
+	catalog: s.object({
+		components: s.map({
+			props: s.zod(),
+			description: s.string()
+		}),
+		actions: s.map({ description: s.string() })
+	})
+}));
+const componentDescriptions = {
+	Stack: "Flex row/column container with gap, padding, alignment and justification.",
+	Card: "Bordered container with an optional title and collapsible body.",
+	Text: "Typographic text: heading, subheading, body, caption or inline code.",
+	Badge: "Small status pill with a semantic variant.",
+	Button: "Clickable button with a variant, optional icon and loading state.",
+	Icon: "Renders an icon resolved by name at runtime.",
+	Divider: "Horizontal rule with an optional centered label.",
+	TextInput: "Single-line text input with two-way state binding.",
+	Switch: "Accessible on/off toggle bound to a boolean state value.",
+	KeyValueTable: "Two-column table of key/value pairs.",
+	DataTable: "Tabular data with columns, rows and optional scroll height.",
+	CodeBlock: "Preformatted code block with a filename and language label.",
+	Progress: "Determinate progress bar.",
+	Tree: "Recursive object/array viewer with expandable nodes.",
+	Tabs: "Tabbed container; each child renders under the positionally-matching tab.",
+	Link: "Hyperlink to a safe-scheme URL with an optional icon.",
+	Select: "Single-select dropdown bound to a state value, with optional search or a native `<select>` fallback."
+};
+/**
+* The Devframes base catalog (catalog v1): the seventeen canonical components
+* with their Devframes-authored Zod prop schemas and descriptions, and an
+* empty action set (actions are dispatched dynamically via the bridge, they
+* are not declared here). Reference frontend libraries implement this set.
+*/
+const baseCatalog = defineCatalog(baseSchema, {
+	components: Object.fromEntries(Object.keys(basePropSchemas).map((name) => [name, {
+		props: basePropSchemas[name],
+		description: componentDescriptions[name]
+	}])),
+	actions: {}
+});
+//#endregion
+export { BadgePropsSchema, ButtonPropsSchema, CardPropsSchema, CodeBlockPropsSchema, DataTablePropsSchema, DividerPropsSchema, IconPropsSchema, JSON_RENDER_INDEX_KEY, KeyValueTablePropsSchema, LinkPropsSchema, ProgressPropsSchema, SelectPropsSchema, StackPropsSchema, SwitchPropsSchema, TabsPropsSchema, TextInputPropsSchema, TextPropsSchema, TreePropsSchema, baseCatalog, baseComponentNames, basePropSchemas, baseSchema };

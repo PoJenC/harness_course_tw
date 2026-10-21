@@ -1,0 +1,25 @@
+模型 claude-haiku-5-5，每階 3 次
+
+階   次  驗收     上線   花費        失敗原因（節錄）
+P0  1  0/7    ❌   $0.0011   ImportError: cannot import name 'validate_transfer' from 'transfer'
+P0  2  0/7    ❌   $0.0014   ImportError: cannot import name 'validate_transfer' from 'transfer'
+P0  3  0/7    ❌   $0.0012   ImportError: cannot import name 'validate_transfer' from 'transfer'
+P1  1  0/7    ❌   $0.0011   ImportError: cannot import name 'FieldValidationError' from 'company_errors'
+P1  2  2/7    ❌   $0.0008   transfer.FieldValidationError: from_account: 轉出帳號不可為空白
+P1  3  0/7    ❌   $0.0009   ModuleNotFoundError: No module named 'company'
+P2  1  2/7    ❌   $0.0007   TypeError: ValidationError.__init__() takes 2 positional arguments but 3 were given
+P2  2  2/7    ❌   $0.0007   TypeError: ValidationError.__init__() got an unexpected keyword argument 'message'
+P2  3  2/7    ❌   $0.0005   TypeError: ValidationError.__init__() takes 2 positional arguments but 3 were given
+P3  1  7/7    ❌   $0.0005   
+P3  2  7/7    ❌   $0.0003   
+P3  3  7/7    ❌   $0.0003   
+P4  1  7/7    ✅   $0.0009   
+P4  2  7/7    ✅   $0.0006   
+P4  3  7/7    ✅   $0.0007   
+
+階   新增    全對次數    各次分數          上線可用    平均花費
+P0  —     0/3      0, 0, 0       0/3      $0.0012
+P1  需求    0/3      0, 2, 0       0/3      $0.0009
+P2  限制    0/3      2, 2, 2       0/3      $0.0006
+P3  範例    3/3      7, 7, 7       0/3      $0.0003
+P4  驗收    3/3      7, 7, 7       3/3      $0.0007
