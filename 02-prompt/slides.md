@@ -85,7 +85,7 @@ flowchart TB
 還記得 01 的 System / Human 嗎？你寫的需求單，會被放在 **Human** 裡，**照原樣**送出去：
 
 ```
-[System]  （Claude Code 的工作守則，約 6,500 token，你看不到）
+[System]  （Claude Code 的工作守則和工具說明，上萬 token，你看不到）
 
 [Human]
 <任務>寫一封請假信</任務>
@@ -211,7 +211,7 @@ for name, spec in ladder.items():
 我們在 `02-prompt/demo/` 做了一個小專案。先有一個**公司框架**，規定錯誤一律用這兩個類別：
 
 ```python
-# company_errors.py（AI 沒看過這個檔案，就像它沒看過 CBMP）
+# company_errors.py（AI 沒看過這個檔案，就像它沒看過你們公司的內部框架）
 class ValidationError(Exception):
     def __init__(self, field): ...      # 參數只有一個：欄位名稱
 class BusinessError(Exception):
@@ -324,9 +324,12 @@ P4 剩下的問題（節錄 3 個）：
 P3 3 次都 7/7，但前端**漏傳金額**時：
 
 ```
-P3（3 次全部）：TypeError: '<=' not supported between 'NoneType' and 'int'   ← 程式當掉
-P4（3 次全部）：ValidationError: amount                                       ← 正確擋下
+P3（3 次全部）：TypeError: '<=' not supported between instances of 'NoneType' and 'int'
+                 ← 程式當掉
+P4（3 次全部）：ValidationError: amount   ← 正確擋下
 ```
+
+<span>來源：02-prompt/demo/traces/ex3_none_check.txt</span>
 
 P4 只多了驗收裡那一句：
 

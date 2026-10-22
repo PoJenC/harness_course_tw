@@ -1,6 +1,6 @@
 # 02 Prompt 小專案：迷你版 prompt 階梯
 
-把原本工作坊第 3 章的實驗（CBMP、Maven、podman）縮成只用 Python 標準函式庫的版本。
+一個只用 Python 標準函式庫的小專案：同一個考題，五種寫法的 prompt，看分數怎麼變。
 
 | 檔案 | 用途 |
 |---|---|
@@ -11,6 +11,7 @@
 | `reference/transfer.py` | 講師正解：7/7、上線可用 |
 | `ex1_questions.py` | 實驗 ①：P0、P4 各叫 AI 列問題（2 次 haiku）|
 | `ex2_ladder.py` | 實驗 ②：P0～P4 各跑 N 次並打分（預設 15 次 haiku，約 3 分鐘）|
+| `ex3_none_check.py` | 實驗 ③：拿每次產生的程式模擬「漏傳金額」，印出實際錯誤（不呼叫 AI）|
 | `runs/ex2_ladder/` | 實驗 ② 每次產生的 `answer.md`、`transfer.py`，資料夾名稱是「階_加了什麼-第幾次」，例如 `P3_加範例-2/` |
 | `traces/` | 投影片引用的輸出 |
 

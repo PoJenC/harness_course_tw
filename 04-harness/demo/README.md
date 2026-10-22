@@ -1,6 +1,6 @@
 # 04 Harness 小專案：迷你商店
 
-一個約 150 行的 harness（`harness.py`），把 Harness 的四件事各用幾十行做出來：
+一個約 170 行的 harness（`harness.py`），把 Harness 的四件事各用幾十行做出來：
 
 | | 在哪裡 |
 |---|---|

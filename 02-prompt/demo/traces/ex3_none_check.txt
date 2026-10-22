@@ -1,0 +1,15 @@
+P0_只有任務-1      ImportError: cannot import name 'validate_transfer' from 'transfer'
+P0_只有任務-2      ImportError: cannot import name 'validate_transfer' from 'transfer'
+P0_只有任務-3      ImportError: cannot import name 'validate_transfer' from 'transfer'
+P1_加需求-1       ImportError: cannot import name 'FieldValidationError' from 'company_errors'. Did you mean: 'Validat
+P1_加需求-2       TypeError: '<=' not supported between instances of 'NoneType' and 'int'
+P1_加需求-3       ModuleNotFoundError: No module named 'company'
+P2_加限制-1       TypeError: ValidationError.__init__() takes 2 positional arguments but 3 were given
+P2_加限制-2       TypeError: '<=' not supported between instances of 'NoneType' and 'int'
+P2_加限制-3       TypeError: '<=' not supported between instances of 'NoneType' and 'int'
+P3_加範例-1       TypeError: '<=' not supported between instances of 'NoneType' and 'int'
+P3_加範例-2       TypeError: '<=' not supported between instances of 'NoneType' and 'int'
+P3_加範例-3       TypeError: '<=' not supported between instances of 'NoneType' and 'int'
+P4_加驗收-1       ValidationError: amount
+P4_加驗收-2       ValidationError: amount
+P4_加驗收-3       ValidationError: amount

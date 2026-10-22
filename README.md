@@ -8,12 +8,12 @@
 |---|---|---|---|
 | `00-opening/` | 開場：AI 的兩個習慣（🎲 猜測、⚡ 短路） | 10 分 | |
 | `01-ai-basics/` | AI 到底在做什麼（接龍、token、記憶、呼叫方式、工具、評分與證據） | 30 分 | 練習 1：找出唬爛 |
-| `02-prompt/` | 怎麼交代工作（Prompt） | 30 分 | 練習 2：聚餐需求單 |
+| `02-prompt/` | 怎麼交代工作（Prompt） | 30 分 | 練習 2：一句話的需求單 |
 | — | 休息 | 10 分 | |
-| `03-context/` | 該給它看什麼（Context）＋ 現場示範 | 30 分 | 練習 3：挑資料上桌 |
-| `04-harness/` | 給它什麼環境（Harness） | 30 分 | 練習 4：整理下載資料夾 |
+| `03-context/` | 該給它看什麼（Context）＋ 現場示範 | 30 分 | 練習 3：哪些資料該放上桌？ |
+| `04-harness/` | 給它什麼環境（Harness） | 30 分 | 練習 4：當一次 harness 設計師 |
 | — | 休息 | 10 分 | |
-| `05-loop-skill/` | 驗收與經驗（Loop、Skill） | 30 分 | 練習 5：當一次驗收的人、練習 6：報帳坑表 |
+| `05-loop-skill/` | 驗收與經驗（Loop、Skill） | 30 分 | 練習 5：當一次驗收的人、練習 6：寫一張「坑表」 |
 | `06-bonus/` | 加場快閃：兩張地圖（Embedding、Ontology，選講） | 0～10 分 | |
 | `07-summary/` | 總結與 Q&A | 5 分 | |
 
@@ -60,17 +60,20 @@ npm run preview   # 預覽打包好的網頁：http://localhost:8080
 只用 Python 標準函式庫，透過本機已登入的 `claude` CLI 呼叫（claude-haiku-5-5，不需要 API key）。
 
 ```bash
+python3 01-ai-basics/demo/ex5_wording.py 1    # 01：證據規定放問題裡／System 各 1 次（約 12 次）
 python3 02-prompt/demo/ex1_questions.py      # 02：先叫它列問題（2 次）
 python3 02-prompt/demo/ex2_ladder.py 1       # 02：prompt 階梯，每階 1 次（5 次）
+python3 02-prompt/demo/ex3_none_check.py     # 02：模擬漏傳金額（不呼叫 AI）
 python3 03-context/demo/context_demo.py 1    # 03：6 種桌面，每種 1 次（6 次）
 python3 04-harness/demo/ex2_boundary.py      # 04：叫它做不該做的事（約 5 次）
 python3 04-harness/demo/ex1_ladder.py 1      # 04：L0～L2 每關 1 次（約 16 次，需要 podman）
+python3 05-loop-skill/demo/ex1_outer_loop.py 1   # 05：沒有驗收／外層驗收／內層自己測各 1 次（約 28 次，需要 podman）
 python3 05-loop-skill/demo/ex2_skill.py 1    # 05：有手冊、沒手冊各 1 次（約 17 次，需要 podman）
 ```
 
 - 不加數字就是投影片用的「每種 3 次」
 - 每次的結果存在各自的 `demo/runs/<實驗名稱>/`，每支程式只會清掉自己的資料夾；投影片引用的輸出在 `demo/traces/`
-- 細節見 `02-prompt/demo/README.md`、`03-context/demo/README.md`、`04-harness/demo/README.md`、`05-loop-skill/demo/README.md`
+- 細節見 `01-ai-basics/demo/README.md`、`02-prompt/demo/README.md`、`03-context/demo/README.md`、`04-harness/demo/README.md`、`05-loop-skill/demo/README.md`
 
 ## 頁面標記
 
@@ -78,6 +81,5 @@ python3 05-loop-skill/demo/ex2_skill.py 1    # 05：有手冊、沒手冊各 1 �
 |---|---|
 | 🎲 / ⚡ | 猜測 / 短路又出現了 |
 | 🐍 | 講解用的 Python 範例（簡化版） |
-| 🔬 實測 | 數字來自各章 `demo/` 的實際執行（claude-haiku-5-5），紀錄在 `demo/traces/` |
-| 🔬 工作坊實測 | 只在 01，數字來自 `../harness` 工作坊的執行紀錄 |
+| 🔬 實測 | 數字來自各章 `demo/` 的實際執行（claude-haiku-5-5；01 的模型比較另外用了 sonnet、opus），紀錄在 `demo/traces/` |
 | ✍️ / 📝 | 練習 / 參考答案 |

@@ -1,8 +1,0 @@
-import{L as e,T as t,Y as n,_ as r,b as i,g as a,gt as o,mt as s,x as c}from"./modules/shiki-mPS_OL6C.js";import{nt as l,rt as u}from"./index-7rFrc0wR.js";import{t as d}from"./slidev/default-DElRNtnH.js";import{t as f}from"./slidev/CodeBlockWrapper-CYPiSYky.js";var p={__name:`slide_total.md__slidev_39`,setup(p){let{$slidev:m,$nav:h,$clicksContext:g,$clicks:_,$page:v,$renderContext:y,$frontmatter:b}=u();return g.setup(),(u,p)=>{let m=f;return e(),r(d,o(t(s(l)(s(b),38))),{default:n(()=>[p[1]||=a(`h2`,null,`你的 prompt 送出去，長什麼樣子？`,-1),p[2]||=a(`p`,null,[i(`還記得 01 的 System / Human 嗎？你寫的需求單，會被放在 `),a(`strong`,null,`Human`),i(` 裡，`),a(`strong`,null,`照原樣`),i(`送出去：`)],-1),c(m,{title:``,ranges:[]},{default:n(()=>[...p[0]||=[a(`pre`,{class:`shiki shiki-themes vitesse-dark vitesse-light slidev-code`,style:{"--shiki-dark":`#dbd7caee`,"--shiki-light":`#393a34`,"--shiki-dark-bg":`#121212`,"--shiki-light-bg":`#ffffff`}},[a(`code`,{class:`language-text`},[a(`span`,{class:`line`},[a(`span`,null,`[System]  （Claude Code 的工作守則，約 6,500 token，你看不到）`)]),i(`
-`),a(`span`,{class:`line`},[a(`span`)]),i(`
-`),a(`span`,{class:`line`},[a(`span`,null,`[Human]`)]),i(`
-`),a(`span`,{class:`line`},[a(`span`,null,`<任務>寫一封請假信</任務>`)]),i(`
-`),a(`span`,{class:`line`},[a(`span`,null,`<需求>給直屬主管；10/24（五）請特休 1 天</需求>`)]),i(`
-`),a(`span`,{class:`line`},[a(`span`,null,`<限制>100 字內；語氣正式但不要太客套；用繁體中文</限制>`)]),i(`
-`),a(`span`,{class:`line`},[a(`span`,null,`<範例>主旨：10/24 特休申請</範例>`)]),i(`
-`),a(`span`,{class:`line`},[a(`span`,null,`<驗收>要寫出代理人和緊急聯絡方式</驗收>`)])])],-1)]]),_:1}),p[3]||=a(`ul`,null,[a(`li`,null,[i(`用`),a(`strong`,null,`標籤`),i(`把元素分開，AI 比較不會把「範例」誤當成「需求」`)]),a(`li`,null,[i(`System 是工具寫好的守則；`),a(`strong`,null,`Human 才是你能控制的部分`)])],-1)]),_:1},16)}}};export{p as default};
